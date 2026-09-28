@@ -165,3 +165,458 @@ p {
   font-size: 22px;
   line-height: 1;
 }
+
+/* Stand-in for Telegram's MainButton/BackButton when running outside Telegram (npm run dev
+   in a plain browser). Never appears on a real Telegram client. */
+.dev-action-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--bg);
+  border-top: 1px solid color-mix(in srgb, var(--hint) 25%, transparent);
+}
+
+.dev-back-button {
+  flex: none;
+  border: 0;
+  background: none;
+  color: var(--link);
+  font-size: 15px;
+  padding: 8px 4px;
+}
+
+.dev-main-button {
+  flex: 1;
+  margin: 0;
+}
+
+/* Buttons */
+
+.button.secondary {
+  width: 100%;
+  margin-top: 4px;
+  background: var(--section-bg);
+  color: var(--link);
+  border: 1px solid color-mix(in srgb, var(--hint) 35%, transparent);
+}
+
+.button.danger {
+  width: 100%;
+  margin-top: 12px;
+  background: none;
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+/* Search & filters */
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--section-bg);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.filter-row select {
+  flex: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--section-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* Chips (tags) */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-static {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 15%, var(--section-bg));
+  color: var(--accent);
+}
+
+.tag-input {
+  position: relative;
+}
+
+.tag-input input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--section-bg);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 15%, var(--section-bg));
+  color: var(--accent);
+}
+
+.chip button {
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  padding: 2px;
+}
+
+.tag-suggestions {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--section-bg);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.tag-suggestions button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  border-radius: 6px;
+}
+
+/* Recipe grid & card */
+
+.recipe-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recipe-card {
+  display: flex;
+  gap: 12px;
+  text-align: left;
+  padding: 10px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--section-bg);
+  color: var(--text);
+}
+
+.recipe-card-image {
+  flex: none;
+  width: 84px;
+  height: 84px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--secondary-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recipe-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recipe-card-placeholder {
+  font-size: 28px;
+  opacity: 0.5;
+}
+
+.recipe-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recipe-card-body h3 {
+  margin: 0;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recipe-card-meta {
+  font-size: 13px;
+}
+
+.recipe-card-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--hint);
+}
+
+.person.favorite {
+  color: var(--danger);
+}
+
+/* Recipe detail */
+
+.recipe-detail {
+  gap: 16px;
+}
+
+.recipe-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--section-bg);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recipe-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recipe-photo-placeholder {
+  color: var(--hint);
+}
+
+.recipe-photo-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.heart {
+  border: 0;
+  background: none;
+  color: var(--hint);
+  font-size: 15px;
+  padding: 4px 0;
+}
+
+.heart.active {
+  color: var(--danger);
+}
+
+.stars {
+  display: flex;
+}
+
+.star {
+  border: 0;
+  background: none;
+  font-size: 20px;
+  color: color-mix(in srgb, var(--hint) 50%, transparent);
+  padding: 2px;
+}
+
+.star.filled {
+  color: #f5a623;
+}
+
+.note-input {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 60px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--secondary-bg);
+  color: var(--text);
+  font-size: 14px;
+  resize: vertical;
+}
+
+.partner-rating {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.servings-stepper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.servings-stepper button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--secondary-bg);
+  color: var(--text);
+  font-size: 18px;
+}
+
+.ingredient-list,
+.step-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ingredient-list {
+  list-style: disc;
+}
+
+/* Recipe form */
+
+.recipe-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--hint);
+}
+
+.recipe-form .field input,
+.recipe-form .field textarea {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--section-bg);
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.field-row {
+  display: flex;
+  gap: 8px;
+}
+
+.field-row .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.ingredient-row {
+  display: grid;
+  grid-template-columns: 56px 64px 1fr 1fr 28px;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.ingredient-row input {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--secondary-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.step-n {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.step-row textarea {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--secondary-bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.step-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-actions button,
+.remove {
+  border: 0;
+  background: var(--secondary-bg);
+  color: var(--hint);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+}
+
+.remove {
+  color: var(--danger);
+}

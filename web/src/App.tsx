@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { signIn, type AuthResult } from "./api";
 import { getStartParam, haptic } from "./telegram";
-import { RecipesScreen } from "./screens/RecipesScreen";
+import { RecipesTab } from "./screens/recipes/RecipesTab";
 import { Placeholder } from "./screens/Placeholder";
+import { DevActionBar } from "./DevActionBar";
 
 type Tab = "recipes" | "lists" | "assistant" | "import";
 
@@ -67,11 +68,14 @@ export function App() {
   return (
     <div className="app">
       <main className="content">
-        {tab === "recipes" && <RecipesScreen user={auth.user} db={auth.db} />}
+        {tab === "recipes" && (
+          <RecipesTab db={auth.db} householdId={auth.user.householdId} myUserId={auth.user.id} />
+        )}
         {tab === "lists" && <Placeholder icon="🛒" title="Grocery lists" text="Shared, live grocery lists arrive in phase 4." />}
         {tab === "assistant" && <Placeholder icon="💬" title="Assistant" text="Your cooking assistant arrives in phase 6." />}
         {tab === "import" && <Placeholder icon="📥" title="Import" text="Cookbook PDF import arrives in phase 3." />}
       </main>
+      <DevActionBar />
       <nav className="tabbar">
         {TABS.map((t) => (
           <button
