@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { scaleIngredients } from "../../../../lib/recipe";
+import { mergeIngredients, type GroceryList, type MergeInput } from "../../../../lib/grocery";
 import type { Member } from "../../hooks/useHouseholdMembers";
 import { useBackButton, useMainButton } from "../../hooks/useTelegramButtons";
+import {
+  addItemsToList,
+  createGroceryList,
+  listActiveGroceryLists,
+} from "../../lib/groceryApi";
 import { deleteRecipePhoto, getSignedPhotoUrl, uploadRecipePhoto } from "../../lib/recipePhotos";
 import { deleteRecipe, fetchRecipe, upsertMyRecipeMeta, type RecipeWithMeta } from "../../lib/recipesApi";
 import { haptic } from "../../telegram";
@@ -32,6 +38,12 @@ export function RecipeDetailScreen({
   const [servings, setServings] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [groceryPanelOpen, setGroceryPanelOpen] = useState(false);
+  const [activeLists, setActiveLists] = useState<GroceryList[] | null>(null);
+  const [selectedListOption, setSelectedListOption] = useState("new");
+  const [addingToGrocery, setAddingToGrocery] = useState(false);
+  const [groceryMessage, setGroceryMessage] = useState<string | null>(null);
 
   function reload() {
     fetchRecipe(db, recipeId)
@@ -103,6 +115,48 @@ export function RecipeDetailScreen({
       setError(err instanceof Error ? err.message : "Couldn't upload that photo.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function openGroceryPanel() {
+    setGroceryPanelOpen(true);
+    setGroceryMessage(null);
+    if (activeLists === null) {
+      try {
+        setActiveLists(await listActiveGroceryLists(db));
+      } catch {
+        setActiveLists([]); // the "new list" option still works even if this fails
+      }
+    }
+  }
+
+  async function addToGroceryList() {
+    if (!recipe) return;
+    setAddingToGrocery(true);
+    setError(null);
+    try {
+      const mergeInputs: MergeInput[] = scaledIngredients.map((ing) => ({
+        item: ing.item,
+        qty: ing.qty,
+        unit: ing.unit,
+        recipeId: recipe.id,
+      }));
+      const merged = mergeIngredients(mergeInputs);
+
+      if (selectedListOption === "new") {
+        const list = await createGroceryList(db, householdId, myUserId, recipe.title, merged);
+        setGroceryMessage(`Added to new list "${list.name}".`);
+      } else {
+        await addItemsToList(db, selectedListOption, myUserId, merged);
+        const list = activeLists?.find((l) => l.id === selectedListOption);
+        setGroceryMessage(`Added to "${list?.name ?? "your list"}".`);
+      }
+      haptic("success");
+      setGroceryPanelOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't add this to a grocery list.");
+    } finally {
+      setAddingToGrocery(false);
     }
   }
 
@@ -217,6 +271,46 @@ export function RecipeDetailScreen({
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="card">
+        <div className="row-between">
+          <h2>Grocery list</h2>
+          {!groceryPanelOpen && (
+            <button className="button secondary compact" onClick={openGroceryPanel}>
+              + Add to list
+            </button>
+          )}
+        </div>
+        {groceryMessage && !groceryPanelOpen && <p className="muted">{groceryMessage}</p>}
+        {groceryPanelOpen && (
+          <div className="grocery-add-panel">
+            <label className="field">
+              <span>Add to</span>
+              <select value={selectedListOption} onChange={(e) => setSelectedListOption(e.target.value)}>
+                <option value="new">New list: "{recipe.title}"</option>
+                {activeLists?.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {servings != null && (
+              <p className="muted">
+                Using {servings} serving{servings === 1 ? "" : "s"} — change the servings above to adjust.
+              </p>
+            )}
+            <div className="confirm-card-actions">
+              <button className="button secondary compact" onClick={() => setGroceryPanelOpen(false)}>
+                Cancel
+              </button>
+              <button className="button compact" disabled={addingToGrocery} onClick={addToGroceryList}>
+                {addingToGrocery ? "Adding…" : "Add"}
+              </button>
+            </div>
+          </div>
         )}
       </section>
 

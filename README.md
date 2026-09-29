@@ -161,6 +161,9 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
       with the list, grouped by aisle.
 - [ ] Tap **Mark as done**; confirm it moves to the "Done" section on the Lists tab, and
       **Reopen** brings it back.
+- [ ] On a recipe's page, tap **+ Add to list** and add it to an existing active list; confirm the
+      ingredients land there at the servings shown on the page.
+- [ ] From the same panel, add a recipe as a **new list** and confirm it's named after the recipe.
 
 **Phase 6 (assistant):**
 - [ ] In the bot, ask "what can I make with [an ingredient from a saved recipe]?" — it should
