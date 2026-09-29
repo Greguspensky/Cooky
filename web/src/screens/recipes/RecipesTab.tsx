@@ -12,10 +12,12 @@ export function RecipesTab({
   db,
   householdId,
   myUserId,
+  onAskAssistant,
 }: {
   db: SupabaseClient;
   householdId: string;
   myUserId: string;
+  onAskAssistant: (prefill: string) => void;
 }) {
   const members = useHouseholdMembers(db);
   const [stack, setStack] = useState<View[]>([{ screen: "list" }]);
@@ -53,6 +55,7 @@ export function RecipesTab({
         onBack={pop}
         onEdit={(id) => push({ screen: "form", id })}
         onDeleted={resetToList}
+        onAskAssistant={onAskAssistant}
       />
     );
   }

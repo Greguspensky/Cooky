@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { respondToPendingAction, sendAssistantMessage, type PendingActionSummary } from "../../lib/assistantApi";
 import { loadLatestConversation, type ChatMessage } from "../../lib/conversationApi";
+import { consumeAssistantPrefill } from "../../hooks/assistantPrefill";
 import { haptic } from "../../telegram";
 
 export function AssistantScreen({ db }: { db: SupabaseClient }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pending, setPending] = useState<PendingActionSummary | null>(null);
   const [conversationId, setConversationId] = useState<string | undefined>();
-  const [input, setInput] = useState("");
+  // Read once on mount: e.g. "Ask the assistant" from cooking mode hands off a starter question.
+  const [input, setInput] = useState(consumeAssistantPrefill);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);

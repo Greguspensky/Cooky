@@ -6,6 +6,7 @@ import { GroceryListsTab } from "./screens/lists/GroceryListsTab";
 import { AssistantScreen } from "./screens/assistant/AssistantScreen";
 import { Placeholder } from "./screens/Placeholder";
 import { DevActionBar } from "./DevActionBar";
+import { setAssistantPrefill } from "./hooks/assistantPrefill";
 
 type Tab = "recipes" | "lists" | "assistant" | "import";
 
@@ -32,6 +33,12 @@ export function App() {
     signIn().then(setAuth);
   };
   useEffect(load, []);
+
+  /** Cooking mode's "Ask the assistant" hands off a starter question and switches tabs. */
+  function askAssistant(prefill: string) {
+    setAssistantPrefill(prefill);
+    setTab("assistant");
+  }
 
   if (auth === "loading") {
     return <div className="center muted">Loading…</div>;
@@ -71,7 +78,12 @@ export function App() {
     <div className="app">
       <main className="content">
         {tab === "recipes" && (
-          <RecipesTab db={auth.db} householdId={auth.user.householdId} myUserId={auth.user.id} />
+          <RecipesTab
+            db={auth.db}
+            householdId={auth.user.householdId}
+            myUserId={auth.user.id}
+            onAskAssistant={askAssistant}
+          />
         )}
         {tab === "lists" && (
           <GroceryListsTab db={auth.db} householdId={auth.user.householdId} myUserId={auth.user.id} />

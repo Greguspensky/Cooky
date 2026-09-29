@@ -12,6 +12,7 @@ import {
 import { deleteRecipePhoto, getSignedPhotoUrl, uploadRecipePhoto } from "../../lib/recipePhotos";
 import { deleteRecipe, fetchRecipe, upsertMyRecipeMeta, type RecipeWithMeta } from "../../lib/recipesApi";
 import { haptic } from "../../telegram";
+import { CookingModeScreen } from "./CookingModeScreen";
 
 export function RecipeDetailScreen({
   db,
@@ -22,6 +23,7 @@ export function RecipeDetailScreen({
   onBack,
   onEdit,
   onDeleted,
+  onAskAssistant,
 }: {
   db: SupabaseClient;
   recipeId: string;
@@ -31,8 +33,10 @@ export function RecipeDetailScreen({
   onBack: () => void;
   onEdit: (id: string) => void;
   onDeleted: () => void;
+  onAskAssistant: (prefill: string) => void;
 }) {
   const [recipe, setRecipe] = useState<RecipeWithMeta | null>(null);
+  const [cooking, setCooking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [servings, setServings] = useState<number | null>(null);
@@ -62,8 +66,9 @@ export function RecipeDetailScreen({
     else setImageUrl(null);
   }, [db, recipe?.image_path]);
 
-  useBackButton(onBack);
-  useMainButton("Edit recipe", () => onEdit(recipeId), !!recipe);
+  // Cooking mode takes over the recipe's own BackButton/MainButton while it's open.
+  useBackButton(onBack, !cooking);
+  useMainButton("Edit recipe", () => onEdit(recipeId), !!recipe && !cooking);
 
   const myMeta = recipe?.recipe_user_meta.find((m) => m.user_id === myUserId);
   const partner = members.find((m) => m.id !== myUserId) ?? null;
@@ -170,6 +175,20 @@ export function RecipeDetailScreen({
   if (error && !recipe) return <p className="error screen">{error}</p>;
   if (!recipe) return <p className="muted screen">Loading…</p>;
 
+  if (cooking) {
+    return (
+      <CookingModeScreen
+        recipe={recipe}
+        scaledIngredients={scaledIngredients}
+        onExit={() => setCooking(false)}
+        onAskAssistant={(prefill) => {
+          setCooking(false);
+          onAskAssistant(prefill);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="screen recipe-detail">
       <button
@@ -202,6 +221,12 @@ export function RecipeDetailScreen({
         </div>
       )}
       {error && <p className="error">{error}</p>}
+
+      {recipe.steps.length > 0 && (
+        <button className="button start-cooking" onClick={() => setCooking(true)}>
+          ▶ Start cooking
+        </button>
+      )}
 
       <section className="card">
         <div className="row-between">
