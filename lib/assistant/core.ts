@@ -10,7 +10,7 @@ import { isWriteTool, TOOLS } from "./tools.js";
 const MAX_TOOL_ITERATIONS = 4;
 const HISTORY_LIMIT = 20;
 
-const SYSTEM_PROMPT = `You are Cooky's cooking assistant for a two-person household. You know their saved
+const SYSTEM_PROMPT = `You are Cookie, a cooking assistant for a two-person household. You know their saved
 recipes and taste preferences. When asked for meal ideas, always call search_recipes first and offer
 matching saved recipes before suggesting anything new. If you suggest a new recipe from general
 knowledge, say clearly that it isn't saved yet and offer to save it. Keep replies short and
