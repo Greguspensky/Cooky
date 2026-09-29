@@ -620,3 +620,151 @@ p {
 .remove {
   color: var(--danger);
 }
+
+/* Grocery lists */
+
+.button.secondary.compact {
+  width: auto;
+  margin-top: 0;
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.list-of-lists {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list-card {
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--section-bg);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.list-card.done {
+  color: var(--hint);
+  font-weight: 400;
+}
+
+.picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.picker-row {
+  padding: 10px 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--hint) 15%, transparent);
+}
+
+.picker-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+}
+
+.picker-check input {
+  width: 18px;
+  height: 18px;
+}
+
+.servings-stepper.compact {
+  margin-top: 6px;
+  margin-left: 28px;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--hint);
+}
+
+.servings-stepper.compact button {
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+}
+
+.add-item-row {
+  display: flex;
+  gap: 8px;
+}
+
+.add-item-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--section-bg);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.grocery-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grocery-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.grocery-item.checked .grocery-item-main span {
+  text-decoration: line-through;
+  color: var(--hint);
+}
+
+.grocery-item-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.grocery-item-main input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.grocery-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.grocery-item-meta select {
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--secondary-bg);
+  color: var(--hint);
+  max-width: 96px;
+}
+
+.avatar.small {
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+}

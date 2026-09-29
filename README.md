@@ -3,16 +3,16 @@
 A private Telegram Mini App and bot for one household: shared recipes, cookbook PDF import,
 grocery lists, cooking mode and an AI assistant. See the project plan for the full spec.
 
-**Status: phase 2 (recipes).** Both of you can add, search, favorite and rate recipes, with a
-servings scaler and a photo of the dish once you've cooked it.
+**Status: phase 4 (grocery lists).** Both of you can add, search and favorite recipes, and build
+shared, live grocery lists from them. Phase 3 (cookbook PDF import) is skipped for now.
 
 ## Layout
 
 | Path | What |
 | --- | --- |
 | `web/` | Mini App front end (Vite + React + TypeScript) |
-| `api/` | Vercel serverless functions: `auth`, `bot` (Telegram webhook), `setup` |
-| `lib/` | Code shared by the server *and* the front end: env, initData validation, JWT, users, bot, and the recipe types/helpers in `recipe.ts` |
+| `api/` | Vercel serverless functions: `auth`, `bot` (Telegram webhook), `setup`, `lists/send` |
+| `lib/` | Code shared by the server *and* the front end: env, initData validation, JWT, users, bot, and the recipe/grocery types and helpers (`recipe.ts`, `grocery.ts`) |
 | `supabase/migrations/` | SQL schema, storage buckets and RLS, applied in order |
 | `scripts/` | Local helpers (dev initData, signing key) |
 
@@ -28,6 +28,20 @@ servings scaler and a photo of the dish once you've cooked it.
    automatically.
 
 The bot rejects anyone outside the allowlist before any handler runs.
+
+### How grocery lists work
+
+Recipe CRUD and grocery-list edits go straight from the browser to Supabase, scoped by RLS, same
+as recipes. "Send to chat" is the one exception: it needs the bot token, so the Mini App calls
+`POST /api/lists/send` with its Supabase access token in an `Authorization: Bearer` header, and
+the server verifies that token itself (`verifySessionToken` in `lib/jwt.ts`) before using the
+service role to fetch the list and message both of your Telegram chats.
+
+Ingredient merging is exact-match only (same name and unit, case-insensitive) — "2 cloves garlic"
+and "1 tsp minced garlic" stay as two lines rather than being guessed into one. The plan's
+LLM-assisted fuzzy merge arrives with the assistant (phase 6), which needs `ANTHROPIC_API_KEY`
+anyway. Each item's store aisle is a keyword guess (`guessStoreSection` in `lib/grocery.ts`,
+English-only for now); tap its dropdown to fix a wrong guess.
 
 ## Setup (one time)
 
@@ -115,6 +129,19 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
       both the detail screen and the list card.
 - [ ] Edit a recipe and confirm the changes stick; delete a test recipe and confirm it's gone.
 - [ ] Once you have more than 20 recipes, confirm **Load more** appears and works.
+
+**Phase 4 (grocery lists):**
+- [ ] From Lists → "+ New list", pick two recipes, adjust one's servings, and create the list.
+- [ ] Confirm an ingredient shared by both recipes (at matching servings) merges into one line
+      with the summed quantity.
+- [ ] Check an item off on your phone; confirm it updates live on your wife's phone without
+      reopening the list (Realtime).
+- [ ] Add a manual item and confirm it lands in a sensible aisle; correct one item's aisle with
+      its dropdown.
+- [ ] Delete an item, then tap **Send to chat** and confirm the bot messages both of your chats
+      with the list, grouped by aisle.
+- [ ] Tap **Mark as done**; confirm it moves to the "Done" section on the Lists tab, and
+      **Reopen** brings it back.
 
 ## Local development
 

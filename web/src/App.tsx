@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { signIn, type AuthResult } from "./api";
 import { getStartParam, haptic } from "./telegram";
 import { RecipesTab } from "./screens/recipes/RecipesTab";
+import { GroceryListsTab } from "./screens/lists/GroceryListsTab";
 import { Placeholder } from "./screens/Placeholder";
 import { DevActionBar } from "./DevActionBar";
 
@@ -71,7 +72,9 @@ export function App() {
         {tab === "recipes" && (
           <RecipesTab db={auth.db} householdId={auth.user.householdId} myUserId={auth.user.id} />
         )}
-        {tab === "lists" && <Placeholder icon="🛒" title="Grocery lists" text="Shared, live grocery lists arrive in phase 4." />}
+        {tab === "lists" && (
+          <GroceryListsTab db={auth.db} householdId={auth.user.householdId} myUserId={auth.user.id} />
+        )}
         {tab === "assistant" && <Placeholder icon="💬" title="Assistant" text="Your cooking assistant arrives in phase 6." />}
         {tab === "import" && <Placeholder icon="📥" title="Import" text="Cookbook PDF import arrives in phase 3." />}
       </main>
