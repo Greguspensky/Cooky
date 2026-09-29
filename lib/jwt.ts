@@ -1,4 +1,4 @@
-import { SignJWT, importJWK, type JWK } from "jose";
+import { SignJWT, importJWK, jwtVerify, type JWK } from "jose";
 import { env } from "./env.js";
 
 export const SESSION_TTL_SECONDS = 60 * 60;
@@ -49,4 +49,37 @@ export async function signSessionToken(
   }
   jwt.setProtectedHeader({ alg: "HS256", typ: "JWT" });
   return { token: await jwt.sign(new TextEncoder().encode(secret)), expiresAt };
+}
+
+/**
+ * Verifies a session token this server issued, for /api endpoints the Mini App calls with its
+ * Supabase access token (e.g. "send this list to chat") instead of going straight to Supabase.
+ * Supabase itself never sees this call, so this checks the same key signSessionToken used.
+ */
+export async function verifySessionToken(token: string): Promise<SessionClaims> {
+  const privateJwk = env.supabaseJwtPrivateKey;
+  const { payload } = privateJwk
+    ? await jwtVerify(token, await importJWK(toPublicJwk(JSON.parse(privateJwk) as JWK)))
+    : await jwtVerify(token, new TextEncoder().encode(requireSecret()), { algorithms: ["HS256"] });
+
+  if (typeof payload.sub !== "string" || typeof payload.household_id !== "string") {
+    throw new Error("Session token is missing required claims");
+  }
+  return {
+    userId: payload.sub,
+    householdId: payload.household_id,
+    telegramId: Number(payload.telegram_id),
+  };
+}
+
+/** Verifying only needs the public half of a signing key; jose's EC verify rejects a private one. */
+function toPublicJwk(jwk: JWK): JWK {
+  const { d: _privateExponent, ...publicJwk } = jwk;
+  return publicJwk;
+}
+
+function requireSecret(): string {
+  const secret = env.supabaseJwtSecret;
+  if (!secret) throw new Error("Set SUPABASE_JWT_SECRET (legacy secret) or SUPABASE_JWT_PRIVATE_KEY");
+  return secret;
 }

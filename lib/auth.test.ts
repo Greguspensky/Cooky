@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { exportJWK, generateKeyPair, jwtVerify, decodeProtectedHeader } from "jose";
-import { signSessionToken } from "./jwt.js";
+import { signSessionToken, verifySessionToken } from "./jwt.js";
 import { signInitData } from "./initData.js";
 import { POST as auth } from "../api/auth.js";
 
@@ -41,6 +41,28 @@ describe("signSessionToken", () => {
 
   it("fails clearly when no key is configured", async () => {
     await expect(signSessionToken(claims)).rejects.toThrow(/SUPABASE_JWT_SECRET/);
+  });
+});
+
+describe("verifySessionToken", () => {
+  it("round-trips a token signed with the legacy secret", async () => {
+    process.env.SUPABASE_JWT_SECRET = "super-secret-jwt-token-with-at-least-32-characters";
+    const { token } = await signSessionToken(claims);
+    await expect(verifySessionToken(token)).resolves.toEqual(claims);
+  });
+
+  it("round-trips a token signed with an imported private key", async () => {
+    const { privateKey } = await generateKeyPair("ES256", { extractable: true });
+    process.env.SUPABASE_JWT_PRIVATE_KEY = JSON.stringify({ ...(await exportJWK(privateKey)), alg: "ES256", kid: "k1" });
+    const { token } = await signSessionToken(claims);
+    await expect(verifySessionToken(token)).resolves.toEqual(claims);
+  });
+
+  it("rejects a token signed with a different secret", async () => {
+    process.env.SUPABASE_JWT_SECRET = "super-secret-jwt-token-with-at-least-32-characters";
+    const { token } = await signSessionToken(claims);
+    process.env.SUPABASE_JWT_SECRET = "a-completely-different-secret-value-1234567890";
+    await expect(verifySessionToken(token)).rejects.toThrow();
   });
 });
 
