@@ -575,11 +575,72 @@ p {
   font-size: 14px;
 }
 
+.step-row-block {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--hint) 15%, transparent);
+}
+
+.step-row-block:last-of-type {
+  border-bottom: 0;
+}
+
+.step-help {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
 .step-row {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+}
+
+.step-extras {
+  margin-left: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.step-ingredient-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.step-tag {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hint) 35%, transparent);
+  background: var(--secondary-bg);
+  color: var(--hint);
+}
+
+.step-tag.active {
+  background: color-mix(in srgb, var(--accent) 15%, var(--section-bg));
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.step-timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--hint);
+}
+
+.step-timer input {
+  width: 60px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--secondary-bg);
+  color: var(--text);
+  font-size: 14px;
 }
 
 .step-n {
@@ -775,6 +836,75 @@ p {
   width: 22px;
   height: 22px;
   font-size: 11px;
+}
+
+/* Cooking mode */
+
+.start-cooking {
+  background: var(--accent);
+}
+
+.cooking-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: calc(100vh - var(--tabbar-height) - env(safe-area-inset-bottom));
+}
+
+.cooking-step-count {
+  margin: 0;
+  font-size: 14px;
+}
+
+.cooking-step-text {
+  font-size: 24px;
+  line-height: 1.4;
+  font-weight: 600;
+  margin: 0;
+}
+
+.cooking-ingredients h2 {
+  margin-bottom: 8px;
+}
+
+.cooking-nav {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.timer-tray {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+.timer-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--section-bg);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-chip.done {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--section-bg));
+}
+
+.timer-chip button {
+  border: 0;
+  background: none;
+  color: var(--hint);
+  font-size: 14px;
+  line-height: 1;
 }
 
 /* Assistant chat */

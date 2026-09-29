@@ -3,9 +3,8 @@
 A private Telegram Mini App and bot for one household: shared recipes, cookbook PDF import,
 grocery lists, cooking mode and an AI assistant. See the project plan for the full spec.
 
-**Status: phase 6 (assistant).** Recipes, favorites and shared grocery lists from phase 4, plus a
-cooking assistant in both the bot and the Mini App, with shared history between the two. Phases 3
-(cookbook import) and 5 (cooking mode) are skipped for now.
+**Status: phase 5 (cooking mode), built after phase 6.** Recipes, shared grocery lists, a cooking
+assistant (phase 6), and now step-by-step cooking mode. Phase 3 (cookbook import) is still skipped.
 
 ## Layout
 
@@ -59,6 +58,32 @@ the plan isn't included: it needs the cookbook importer (phase 3), which is skip
 
 `propose_preference_update` only ever changes the preferences of whoever is chatting, never their
 partner's, and only adds to your likes/dislikes rather than replacing them outright.
+
+### How cooking mode works
+
+**▶ Start cooking** on a recipe with steps opens one step per screen, at the servings shown on the
+page. **Next step**/**Finish** is the MainButton; **‹ Previous** is an on-page button; Telegram's
+BackButton exits cooking mode back to the recipe.
+
+A step shows only the ingredients tagged to it in the Edit form's "Uses" chips. If a recipe has no
+tagging at all, every step falls back to showing the full ingredient list; if some steps are tagged
+and others aren't, an untagged step just shows none (it's assumed to genuinely need nothing new,
+like "let it rest"). Tagging is optional — untagged recipes still work in cooking mode, just
+without per-step filtering.
+
+Each step can have an optional timer (set in minutes on the Edit form). Starting one adds it to a
+tray that stays visible across every step, not just the one it was started on, so a "simmer 20 min"
+timer from step 2 is still counting down when you're reading step 4. A finished timer triggers a
+haptic and a short beep; multiple timers can run at once. Timers are only kept in the page's memory
+— leaving cooking mode (or the app) clears them, there's no background/notification-based timer yet.
+
+**💬 Ask the assistant** exits cooking mode and switches to the Assistant tab with a starter message
+like `About "Lasagna", step 3 ("Bake for 20 min"): ` already typed in, so you just finish the
+question (e.g. "what can I use instead of ricotta?").
+
+The screen-wake-lock (keeping the phone's screen on) uses the standard browser API and is
+best-effort: it works on Chromium-based clients (most Android Telegram) but may silently do nothing
+on older WebKit-based ones (some iOS Telegram versions) — worth checking on both of your phones.
 
 ## Setup (one time)
 
@@ -179,6 +204,22 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
       like?" and confirm it remembers.
 - [ ] Ask for something, then leave the confirmation unanswered for 15+ minutes; confirm it says
       the suggestion expired rather than going ahead.
+
+**Phase 5 (cooking mode):**
+- [ ] Edit a recipe, tag a couple of ingredients to specific steps, and set a timer (minutes) on
+      one step; save.
+- [ ] Tap **▶ Start cooking**; confirm each step shows only its own tagged ingredients, and an
+      untagged step shows none (not the full list).
+- [ ] Start that step's timer, then move to a later step; confirm the timer tray is still visible
+      and counting down. Let it finish and confirm you feel/hear the alert.
+- [ ] Start cooking a recipe that has steps but no ingredient tagging at all; confirm every step
+      shows the full ingredient list instead.
+- [ ] Tap **💬 Ask the assistant** mid-recipe; confirm it switches to the Assistant tab with the
+      recipe and step already typed into the message box.
+- [ ] Leave the phone idle for a minute or two while cooking mode is open; check whether the screen
+      stays on (note which of your two phones it works on, since this varies by platform).
+- [ ] Tap **‹ Previous** and the phone's own back gesture/BackButton; confirm one moves a step back
+      and the other exits cooking mode to the recipe.
 
 ## Local development
 
