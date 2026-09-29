@@ -11,19 +11,22 @@ interface ActiveTimer {
   done: boolean;
 }
 
-/** A short beep via the Web Audio API — no audio asset needed. */
-function playBeep(): void {
+/** Two quick tones via the Web Audio API — no audio asset needed. Called once per second for as
+ * long as a timer sits "done" and undismissed, so it reads as an alarm ringing, not one beep. */
+function playAlarm(): void {
   try {
     const AudioCtx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    osc.type = "sine";
-    osc.frequency.value = 880;
-    osc.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.3);
-    osc.onended = () => ctx.close();
+    [0, 0.18].forEach((offset) => {
+      const osc = ctx.createOscillator();
+      osc.type = "square";
+      osc.frequency.value = 880;
+      osc.connect(ctx.destination);
+      osc.start(ctx.currentTime + offset);
+      osc.stop(ctx.currentTime + offset + 0.15);
+    });
+    setTimeout(() => ctx.close(), 500);
   } catch {
     // Some browsers require a user gesture before audio; a missed beep isn't worth surfacing.
   }
@@ -49,7 +52,6 @@ export function CookingModeScreen({
 }) {
   const [stepIndex, setStepIndex] = useState(0);
   const [timers, setTimers] = useState<ActiveTimer[]>([]);
-  const [, setTick] = useState(0);
 
   const steps = recipe.steps;
   const step = steps[stepIndex];
@@ -72,23 +74,18 @@ export function CookingModeScreen({
   }, []);
 
   // One shared ticker for however many timers are running, rather than one interval each.
+  // While at least one timer is "done", this rings every second until it's dismissed — a single
+  // beep at zero is too easy to miss over the sound of actual cooking.
   useEffect(() => {
     const id = setInterval(() => {
-      setTick((n) => n + 1);
       setTimers((prev) => {
-        let justFinished = false;
-        const next = prev.map((t) => {
-          if (!t.done && Date.now() >= t.endsAt) {
-            justFinished = true;
-            return { ...t, done: true };
-          }
-          return t;
-        });
-        if (justFinished) {
+        if (prev.length === 0) return prev; // nothing to update or ring; skip the re-render
+        const next = prev.map((t) => (!t.done && Date.now() >= t.endsAt ? { ...t, done: true } : t));
+        if (next.some((t) => t.done)) {
           haptic("success");
-          playBeep();
+          playAlarm();
         }
-        return justFinished ? next : prev;
+        return next;
       });
     }, 1000);
     return () => clearInterval(id);
