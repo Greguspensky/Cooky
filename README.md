@@ -3,16 +3,17 @@
 A private Telegram Mini App and bot for one household: shared recipes, cookbook PDF import,
 grocery lists, cooking mode and an AI assistant. See the project plan for the full spec.
 
-**Status: phase 4 (grocery lists).** Both of you can add, search and favorite recipes, and build
-shared, live grocery lists from them. Phase 3 (cookbook PDF import) is skipped for now.
+**Status: phase 6 (assistant).** Recipes, favorites and shared grocery lists from phase 4, plus a
+cooking assistant in both the bot and the Mini App, with shared history between the two. Phases 3
+(cookbook import) and 5 (cooking mode) are skipped for now.
 
 ## Layout
 
 | Path | What |
 | --- | --- |
 | `web/` | Mini App front end (Vite + React + TypeScript) |
-| `api/` | Vercel serverless functions: `auth`, `bot` (Telegram webhook), `setup`, `lists/send` |
-| `lib/` | Code shared by the server *and* the front end: env, initData validation, JWT, users, bot, and the recipe/grocery types and helpers (`recipe.ts`, `grocery.ts`) |
+| `api/` | Vercel serverless functions: `auth`, `bot` (Telegram webhook), `setup`, `lists/send`, `assistant/message`, `assistant/confirm` |
+| `lib/` | Code shared by the server *and* the front end: env, initData validation, JWT, users, bot, the recipe/grocery types and helpers (`recipe.ts`, `grocery.ts`), and the assistant core in `assistant/` |
 | `supabase/migrations/` | SQL schema, storage buckets and RLS, applied in order |
 | `scripts/` | Local helpers (dev initData, signing key) |
 
@@ -42,6 +43,22 @@ and "1 tsp minced garlic" stay as two lines rather than being guessed into one. 
 LLM-assisted fuzzy merge arrives with the assistant (phase 6), which needs `ANTHROPIC_API_KEY`
 anyway. Each item's store aisle is a keyword guess (`guessStoreSection` in `lib/grocery.ts`,
 English-only for now); tap its dropdown to fix a wrong guess.
+
+### How the assistant works
+
+One conversation history per person, shared between the bot and the Mini App (`conversations` /
+`messages`), so you can start asking in one and keep going in the other. The assistant always
+searches your saved recipes first and says clearly when it's suggesting something new instead.
+
+Tools it can call: `search_recipes`, `get_recipe`, `get_preferences`, `open_in_app` run immediately
+(read-only). `save_recipe`, `create_grocery_list`, `add_to_grocery_list` and
+`propose_preference_update` change data, so each one becomes a **pending action** instead of
+running right away — you see a summary with Confirm/Cancel (inline buttons in the bot, a card in
+the Mini App), and it expires after 15 minutes if you ignore it. `search_cookbook_candidates` from
+the plan isn't included: it needs the cookbook importer (phase 3), which is skipped for now.
+
+`propose_preference_update` only ever changes the preferences of whoever is chatting, never their
+partner's, and only adds to your likes/dislikes rather than replacing them outright.
 
 ## Setup (one time)
 
@@ -86,9 +103,11 @@ Vercel → Project → **Settings → Environment Variables** (Production and Pr
 | `SUPABASE_ANON_KEY` | anon / publishable key (it's sent to the browser; that's fine) |
 | `SUPABASE_SERVICE_ROLE_KEY` | service_role / secret key (server only) |
 | `SUPABASE_JWT_SECRET` or `SUPABASE_JWT_PRIVATE_KEY` | See step 2 |
+| `ANTHROPIC_API_KEY` | From [console.anthropic.com](https://console.anthropic.com) → API Keys |
+| `CLAUDE_MODEL_MAIN` | A current Claude model id, e.g. `claude-sonnet-5` — check Anthropic's docs for the latest, since names change over time |
 | `MINI_APP_URL` | Optional. Defaults to the production domain (or the branch URL on previews) |
 
-The Anthropic and OpenAI keys aren't needed until later phases. Redeploy after changing variables.
+The OpenAI key isn't needed until phase 7 (voice). Redeploy after changing variables.
 
 ### 4. Register the bot
 
@@ -142,6 +161,21 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
       with the list, grouped by aisle.
 - [ ] Tap **Mark as done**; confirm it moves to the "Done" section on the Lists tab, and
       **Reopen** brings it back.
+
+**Phase 6 (assistant):**
+- [ ] In the bot, ask "what can I make with [an ingredient from a saved recipe]?" — it should
+      mention that saved recipe by name before suggesting anything new.
+- [ ] Ask it to suggest something new; it should say clearly that it isn't saved yet.
+- [ ] Ask it to save that suggestion. Confirm you get Confirm/Cancel buttons in the bot, and
+      tapping **Confirm** adds it to your Recipes tab.
+- [ ] Start a conversation in the bot, then open the Assistant tab in the Mini App and confirm
+      the same messages are there; reply from the app and check the bot sees it too.
+- [ ] Ask it to build a grocery list from two saved recipes; confirm, then check the list appears
+      under Lists.
+- [ ] Tell it "I don't like cilantro"; confirm the preference update, then ask it "what do I not
+      like?" and confirm it remembers.
+- [ ] Ask for something, then leave the confirmation unanswered for 15+ minutes; confirm it says
+      the suggestion expired rather than going ahead.
 
 ## Local development
 

@@ -623,7 +623,7 @@ p {
 
 /* Grocery lists */
 
-.button.secondary.compact {
+.button.compact {
   width: auto;
   margin-top: 0;
   padding: 8px 14px;
@@ -767,4 +767,72 @@ p {
   width: 22px;
   height: 22px;
   font-size: 11px;
+}
+
+/* Assistant chat */
+
+.assistant-screen {
+  height: calc(100vh - var(--tabbar-height) - env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 12px;
+}
+
+.assistant-screen h1 {
+  flex: none;
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.bubble.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: var(--accent-text);
+  border-bottom-right-radius: 4px;
+}
+
+.bubble.assistant {
+  align-self: flex-start;
+  background: var(--section-bg);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+
+.confirm-card {
+  align-self: flex-start;
+  max-width: 90%;
+  background: var(--section-bg);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.confirm-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.confirm-card-actions .button {
+  flex: 1;
+  margin: 0;
+}
+
+.chat-input-row {
+  flex: none;
+  margin-top: 8px;
 }
