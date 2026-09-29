@@ -8,7 +8,7 @@ export const PRIVATE_APP_MESSAGE =
   "Sorry, this is a private app for one household. It isn't open to other Telegram accounts.";
 
 /** Inline button that opens the Mini App, optionally deep-linking via `startapp`. */
-export function openAppKeyboard(text = "Open Cooky", startParam?: string): InlineKeyboard {
+export function openAppKeyboard(text = "Open Cookie", startParam?: string): InlineKeyboard {
   const url = new URL(env.miniAppUrl);
   if (startParam) url.searchParams.set("startapp", startParam);
   return new InlineKeyboard().webApp(text, url.toString());
@@ -33,7 +33,7 @@ export function getBot(): Bot {
   bot.command("start", async (ctx) => {
     const name = ctx.from?.first_name ?? "there";
     await ctx.reply(
-      `Hi ${name}! Cooky keeps your recipes, grocery lists and cookbooks in one place.\n\n` +
+      `Hi ${name}! Cookie keeps your recipes, grocery lists and cookbooks in one place.\n\n` +
         "Tap the button below (or the menu button) to open the app.",
       { reply_markup: openAppKeyboard() },
     );

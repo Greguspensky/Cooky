@@ -24,7 +24,7 @@ export async function GET(request: Request): Promise<Response> {
   await api.setChatMenuButton({
     menu_button: { type: "web_app", text: "Open", web_app: { url: appUrl } },
   });
-  await api.setMyCommands([{ command: "start", description: "Open Cooky" }]);
+  await api.setMyCommands([{ command: "start", description: "Open Cookie" }]);
   const info = await api.getWebhookInfo();
 
   return Response.json(

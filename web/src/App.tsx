@@ -41,7 +41,7 @@ export function App() {
       <div className="center">
         <div className="emoji">🔒</div>
         <h1>Private app</h1>
-        <p className="muted">Cooky is a private app for one household and isn't available to this account.</p>
+        <p className="muted">Cookie is a private app for one household and isn't available to this account.</p>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export function App() {
       <div className="center">
         <div className="emoji">🍪</div>
         <h1>Open in Telegram</h1>
-        <p className="muted">Cooky runs inside Telegram. Open it from the bot's menu button.</p>
+        <p className="muted">Cookie runs inside Telegram. Open it from the bot's menu button.</p>
       </div>
     );
   }

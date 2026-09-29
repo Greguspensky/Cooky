@@ -1,4 +1,4 @@
-# Cooky
+# Cookie
 
 A private Telegram Mini App and bot for one household: shared recipes, cookbook PDF import,
 grocery lists, cooking mode and an AI assistant. See the project plan for the full spec.
@@ -132,7 +132,7 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
 ### 5. Test on a phone
 
 **Phase 1 (foundation):**
-- [ ] You and your wife: `/start` in the bot replies with an **Open Cooky** button.
+- [ ] You and your wife: `/start` in the bot replies with an **Open Cookie** button.
 - [ ] The menu button and the Open button both open the app and show your name.
 - [ ] The app follows Telegram's light/dark theme.
 - [ ] Any other account: the bot replies "private app", and the Mini App shows **Private app**.
