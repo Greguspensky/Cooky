@@ -33,6 +33,13 @@ export const env = {
   get supabaseJwtPrivateKey() {
     return process.env.SUPABASE_JWT_PRIVATE_KEY || undefined;
   },
+  get anthropicApiKey() {
+    return required("ANTHROPIC_API_KEY");
+  },
+  /** Used for the assistant's conversation; check current model names in Anthropic's docs. */
+  get claudeModelMain() {
+    return required("CLAUDE_MODEL_MAIN");
+  },
   /**
    * Public URL of the Mini App. Defaults to this deployment's stable URL on Vercel:
    * the branch URL for previews, the production domain otherwise.

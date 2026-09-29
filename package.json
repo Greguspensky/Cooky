@@ -15,6 +15,7 @@
     "gen:signing-key": "node scripts/gen-signing-key.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
     "@supabase/supabase-js": "^2.117.2",
     "grammy": "^1.46.0",
     "jose": "^6.2.12",
