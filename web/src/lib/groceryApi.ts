@@ -67,6 +67,40 @@ export async function createGroceryList(
   return list.data as GroceryList;
 }
 
+/** Lists currently shoppable ("active") lists, for "add this recipe to an existing list" pickers. */
+export async function listActiveGroceryLists(db: SupabaseClient): Promise<GroceryList[]> {
+  const { data, error } = await db
+    .from("grocery_lists")
+    .select("*")
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data as GroceryList[];
+}
+
+/** Appends merged ingredient lines to an existing list. Doesn't merge with items already on the
+ * list (same as adding an item by hand) — just the recipe's own ingredients get merged together. */
+export async function addItemsToList(
+  db: SupabaseClient,
+  listId: string,
+  userId: string,
+  items: MergedItem[],
+): Promise<void> {
+  if (items.length === 0) return;
+  const { error } = await db.from("grocery_items").insert(
+    items.map((i) => ({
+      list_id: listId,
+      item: i.item,
+      qty: i.qty,
+      unit: i.unit,
+      store_section: i.store_section,
+      added_by: userId,
+      source_recipe_ids: i.source_recipe_ids,
+    })),
+  );
+  if (error) throw error;
+}
+
 export async function addGroceryItem(
   db: SupabaseClient,
   listId: string,

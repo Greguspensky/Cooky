@@ -519,9 +519,9 @@ p {
   list-style: disc;
 }
 
-/* Recipe form */
+/* Form fields (recipe form, and the grocery-add panel on a recipe's page) */
 
-.recipe-form .field {
+.field {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -529,8 +529,9 @@ p {
   color: var(--hint);
 }
 
-.recipe-form .field input,
-.recipe-form .field textarea {
+.field input,
+.field textarea,
+.field select {
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
@@ -538,6 +539,13 @@ p {
   color: var(--text);
   font-size: 16px;
   font-family: inherit;
+}
+
+.grocery-add-panel {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .field-row {
