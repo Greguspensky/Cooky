@@ -5,7 +5,7 @@ import { RecipesTab } from "./screens/recipes/RecipesTab";
 import { GroceryListsTab } from "./screens/lists/GroceryListsTab";
 import { AssistantScreen } from "./screens/assistant/AssistantScreen";
 import { CalendarTab } from "./screens/calendar/CalendarTab";
-import { Placeholder } from "./screens/Placeholder";
+import { ImportTab } from "./screens/import/ImportTab";
 import { DevActionBar } from "./DevActionBar";
 import { setAssistantPrefill } from "./hooks/assistantPrefill";
 
@@ -26,9 +26,15 @@ function tabForStartParam(param: string | undefined): Tab {
   return "recipes";
 }
 
+/** For a `review_<cookbook_id>` deep link, the cookbook id to open straight into. */
+function cookbookIdForStartParam(param: string | undefined): string | undefined {
+  return param?.startsWith("review_") ? param.slice("review_".length) : undefined;
+}
+
 export function App() {
   const [auth, setAuth] = useState<AuthResult | "loading">("loading");
   const [tab, setTab] = useState<Tab>(() => tabForStartParam(getStartParam()));
+  const [initialCookbookId] = useState<string | undefined>(() => cookbookIdForStartParam(getStartParam()));
 
   const load = () => {
     setAuth("loading");
@@ -94,7 +100,14 @@ export function App() {
           <CalendarTab db={auth.db} householdId={auth.user.householdId} myUserId={auth.user.id} />
         )}
         {tab === "assistant" && <AssistantScreen db={auth.db} />}
-        {tab === "import" && <Placeholder icon="📥" title="Import" text="Cookbook PDF import arrives in phase 3." />}
+        {tab === "import" && (
+          <ImportTab
+            db={auth.db}
+            householdId={auth.user.householdId}
+            myUserId={auth.user.id}
+            initialCookbookId={initialCookbookId}
+          />
+        )}
       </main>
       <DevActionBar />
       <nav className="tabbar">

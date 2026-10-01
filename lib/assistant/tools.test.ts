@@ -9,17 +9,21 @@ describe("isWriteTool", () => {
   });
 
   it("classifies read-only tools and unknown names as non-writes", () => {
-    for (const name of ["search_recipes", "get_recipe", "get_preferences", "open_in_app", "get_cook_entries", "nonsense"]) {
+    for (const name of [
+      "search_recipes",
+      "get_recipe",
+      "get_preferences",
+      "open_in_app",
+      "get_cook_entries",
+      "search_cookbook_candidates",
+      "nonsense",
+    ]) {
       expect(isWriteTool(name)).toBe(false);
     }
   });
 });
 
 describe("TOOLS", () => {
-  it("declares no tool the plan's search_cookbook_candidates (needs phase 3)", () => {
-    expect(TOOLS.some((t) => t.name === "search_cookbook_candidates")).toBe(false);
-  });
-
   it("every declared tool name is unique", () => {
     const names = TOOLS.map((t) => t.name);
     expect(new Set(names).size).toBe(names.length);

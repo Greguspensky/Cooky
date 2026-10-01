@@ -1173,3 +1173,29 @@ p {
   flex: none;
   margin-top: 8px;
 }
+
+.import-candidate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.import-candidate h3 {
+  margin: 0 0 4px;
+}
+
+.duplicate-warning {
+  color: var(--danger);
+}
+
+.import-candidate-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.import-candidate-actions .button {
+  flex: 1;
+  margin: 0;
+}
