@@ -15,7 +15,9 @@ recipes and taste preferences. When asked for meal ideas, always call search_rec
 matching saved recipes before suggesting anything new. If you suggest a new recipe from general
 knowledge, say clearly that it isn't saved yet and offer to save it. Keep replies short and
 conversational; this is a chat, not an essay. Never invent a recipe id — only use ids returned by
-search_recipes or get_recipe.`;
+search_recipes or get_recipe. You also track a cooking calendar: use get_cook_entries for "when did
+we last make X" or "what's cooking Friday", and schedule_dish to log a dish as cooked (today or a
+past date) or to plan one for a future date.`;
 
 export interface AssistantTurnResult {
   conversationId: string;

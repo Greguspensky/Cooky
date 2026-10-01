@@ -1,10 +1,12 @@
 # Cookie
 
 A private Telegram Mini App and bot for one household: shared recipes, cookbook PDF import,
-grocery lists, cooking mode and an AI assistant. See the project plan for the full spec.
+grocery lists, cooking mode, a cooking calendar, and an AI assistant. See the project plan for the
+full spec (the calendar is an addition beyond the original plan).
 
-**Status: phase 5 (cooking mode), built after phase 6.** Recipes, shared grocery lists, a cooking
-assistant (phase 6), and now step-by-step cooking mode. Phase 3 (cookbook import) is still skipped.
+**Status: phases 1–2, 4–6, plus a Calendar tab.** Recipes, shared grocery lists, step-by-step
+cooking mode, a cooking assistant, and a calendar for scheduling and logging what's been cooked.
+Phase 3 (cookbook import) is still skipped.
 
 ## Layout
 
@@ -12,7 +14,7 @@ assistant (phase 6), and now step-by-step cooking mode. Phase 3 (cookbook import
 | --- | --- |
 | `web/` | Mini App front end (Vite + React + TypeScript) |
 | `api/` | Vercel serverless functions: `auth`, `bot` (Telegram webhook), `setup`, `lists/send`, `assistant/message`, `assistant/confirm` |
-| `lib/` | Code shared by the server *and* the front end: env, initData validation, JWT, users, bot, the recipe/grocery types and helpers (`recipe.ts`, `grocery.ts`), and the assistant core in `assistant/` |
+| `lib/` | Code shared by the server *and* the front end: env, initData validation, JWT, users, bot, the recipe/grocery/calendar types and helpers (`recipe.ts`, `grocery.ts`, `cookEntries.ts`), and the assistant core in `assistant/` |
 | `supabase/migrations/` | SQL schema, storage buckets and RLS, applied in order |
 | `scripts/` | Local helpers (dev initData, signing key) |
 
@@ -49,12 +51,19 @@ One conversation history per person, shared between the bot and the Mini App (`c
 `messages`), so you can start asking in one and keep going in the other. The assistant always
 searches your saved recipes first and says clearly when it's suggesting something new instead.
 
-Tools it can call: `search_recipes`, `get_recipe`, `get_preferences`, `open_in_app` run immediately
-(read-only). `save_recipe`, `create_grocery_list`, `add_to_grocery_list` and
-`propose_preference_update` change data, so each one becomes a **pending action** instead of
-running right away — you see a summary with Confirm/Cancel (inline buttons in the bot, a card in
-the Mini App), and it expires after 15 minutes if you ignore it. `search_cookbook_candidates` from
-the plan isn't included: it needs the cookbook importer (phase 3), which is skipped for now.
+Tools it can call: `search_recipes`, `get_recipe`, `get_preferences`, `open_in_app`,
+`get_cook_entries` (the cooking calendar — "when did we last make X", "what's cooking Friday") run
+immediately (read-only). `save_recipe`, `create_grocery_list`, `add_to_grocery_list`,
+`schedule_dish` and `propose_preference_update` change data, so each one becomes a **pending
+action** instead of running right away — you see a summary with Confirm/Cancel (inline buttons in
+the bot, a card in the Mini App), and it expires after 15 minutes if you ignore it.
+`search_cookbook_candidates` from the plan isn't included: it needs the cookbook importer
+(phase 3), which is skipped for now.
+
+`schedule_dish`'s default "today" is computed on the server (Vercel, which runs in UTC), not your
+phone's timezone — it can be off by a day right around UTC midnight if you don't give it an
+explicit date. Give an explicit `YYYY-MM-DD` for anything date-sensitive near that boundary; the
+Calendar tab itself is unaffected, since it always uses your phone's own local date.
 
 `propose_preference_update` only ever changes the preferences of whoever is chatting, never their
 partner's, and only adds to your likes/dislikes rather than replacing them outright.
@@ -85,6 +94,22 @@ The screen-wake-lock (keeping the phone's screen on) uses the standard browser A
 best-effort: it works on Chromium-based clients (most Android Telegram) but may silently do nothing
 on older WebKit-based ones (some iOS Telegram versions) — worth checking on both of your phones.
 
+### How the calendar works
+
+Not in the original plan — added afterward. One table, `cook_entries`, backs both the Calendar tab
+and the "Cooking history" card on a recipe's page: a row dated today or earlier is immediately
+**cooked** (fits logging something you've already made); a future-dated row is **planned**, shown
+on the Calendar, until you tap **Mark cooked** on it (only offered once its date has arrived — a
+plan that never happened doesn't inflate the count).
+
+The Calendar tab is a month grid (dot = at least one entry that day) with the selected day's dishes
+listed below it; **+ Add** searches your recipes and logs the pick for that day. A recipe's own page
+shows how many times it's been cooked, its most recent date, and its last 5 dates, with shortcuts to
+log it for today or schedule it for a future date.
+
+Multiple dishes can be logged on the same day — there's no separate "meal type" (breakfast/lunch/
+dinner) concept, just a list per day.
+
 ## Setup (one time)
 
 ### 1. Supabase schema
@@ -98,8 +123,10 @@ pasting the next:
    photos of dishes you've cooked, scoped to your household.
 3. `supabase/migrations/0003_recipe_total_minutes.sql` — a generated `total_minutes` column
    (prep + cook time), used by the "under N minutes" filter.
+4. `supabase/migrations/0004_cook_entries.sql` — the `cook_entries` table backing the Calendar tab
+   and each recipe's cooking history.
 
-If you already ran `0001_init.sql` for phase 1, you only need to add `0002` and `0003` now.
+If you've already run the earlier ones, you only need to add whichever are new to you.
 
 ### 2. Supabase JWT
 
@@ -204,6 +231,19 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
       like?" and confirm it remembers.
 - [ ] Ask for something, then leave the confirmation unanswered for 15+ minutes; confirm it says
       the suggestion expired rather than going ahead.
+- [ ] Ask it to log a saved dish as cooked today; confirm it, then check the recipe's Cooking
+      history and the Calendar tab both show it.
+- [ ] Ask it "what's cooking [a day you've scheduled something for]"; confirm it answers correctly.
+
+**Calendar:**
+- [ ] On the Calendar tab, tap today, **+ Add**, and log a dish; confirm a dot appears on that day
+      and the dish is listed below with a "Cooked" chip.
+- [ ] Tap a future day, add a dish there; confirm it shows a "Planned" chip and no **Mark cooked**
+      button yet (only offered once the date arrives).
+- [ ] On a recipe's page, use **Log as cooked today** and **Schedule for later**; confirm the
+      Cooking history count, last-cooked date and date list all update correctly.
+- [ ] Add a dish from the Calendar tab on one phone; confirm it shows up for your wife too (it's
+      shared household data, like grocery lists).
 
 **Phase 5 (cooking mode):**
 - [ ] Edit a recipe, tag a couple of ingredients to specific steps, and set a timer (minutes) on

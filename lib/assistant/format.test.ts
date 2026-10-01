@@ -21,6 +21,17 @@ describe("describeAppliedAction", () => {
     expect(describeAppliedAction("propose_preference_update", {})).toMatch(/preferences/i);
   });
 
+  it("describes a logged (past-dated) dish as cooked", () => {
+    const message = describeAppliedAction("schedule_dish", { title: "Lasagna", date: "2026-09-01", status: "cooked" });
+    expect(message).toContain("Lasagna");
+    expect(message).toMatch(/cooked/i);
+  });
+
+  it("describes a future-dated dish as scheduled", () => {
+    const message = describeAppliedAction("schedule_dish", { title: "Lasagna", date: "2099-09-01", status: "planned" });
+    expect(message).toMatch(/scheduled/i);
+  });
+
   it("falls back for an unknown tool", () => {
     expect(describeAppliedAction("mystery_tool", {})).toBe("Done.");
   });

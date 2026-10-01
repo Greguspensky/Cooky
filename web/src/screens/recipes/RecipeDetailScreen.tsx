@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { scaleIngredients } from "../../../../lib/recipe";
 import { mergeIngredients, type GroceryList, type MergeInput } from "../../../../lib/grocery";
+import { toLocalISODate, type CookEntry } from "../../../../lib/cookEntries";
 import type { Member } from "../../hooks/useHouseholdMembers";
 import { useBackButton, useMainButton } from "../../hooks/useTelegramButtons";
+import { addCookEntry, listCookEntriesForRecipe } from "../../lib/cookEntriesApi";
 import {
   addItemsToList,
   createGroceryList,
@@ -49,6 +51,9 @@ export function RecipeDetailScreen({
   const [addingToGrocery, setAddingToGrocery] = useState(false);
   const [groceryMessage, setGroceryMessage] = useState<string | null>(null);
 
+  const [cookHistory, setCookHistory] = useState<CookEntry[] | null>(null);
+  const [schedulingDate, setSchedulingDate] = useState<string | null>(null);
+
   function reload() {
     fetchRecipe(db, recipeId)
       .then((r) => {
@@ -56,6 +61,26 @@ export function RecipeDetailScreen({
         setServings(r.servings);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Couldn't load this recipe."));
+  }
+
+  function reloadHistory() {
+    listCookEntriesForRecipe(db, recipeId)
+      .then(setCookHistory)
+      .catch(() => setCookHistory([]));
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(reloadHistory, [db, recipeId]);
+
+  async function logCooked(dateISO: string) {
+    try {
+      await addCookEntry(db, householdId, myUserId, recipeId, dateISO);
+      haptic(dateISO <= toLocalISODate(new Date()) ? "success" : "tap");
+      setSchedulingDate(null);
+      reloadHistory();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't log that.");
+    }
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -258,6 +283,53 @@ export function RecipeDetailScreen({
             {partnerMeta?.rating ? ` ${"★".repeat(partnerMeta.rating)}` : " no rating yet"}
           </p>
         )}
+      </section>
+
+      <section className="card">
+        <h2>Cooking history</h2>
+        {cookHistory === null && <p className="muted">Loading…</p>}
+        {cookHistory && (
+          <>
+            <p className="muted">
+              Cooked {cookHistory.filter((e) => e.status === "cooked").length} time
+              {cookHistory.filter((e) => e.status === "cooked").length === 1 ? "" : "s"}
+              {cookHistory.some((e) => e.status === "cooked") &&
+                ` — last on ${cookHistory.find((e) => e.status === "cooked")!.entry_date}`}
+            </p>
+            {cookHistory.length > 0 && (
+              <ul className="history-dates">
+                {cookHistory.slice(0, 5).map((e) => (
+                  <li key={e.id}>
+                    {e.entry_date}
+                    {e.status === "planned" && <span className="status-chip">Planned</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+        <div className="history-actions">
+          <button className="button secondary compact" onClick={() => logCooked(toLocalISODate(new Date()))}>
+            Log as cooked today
+          </button>
+          {schedulingDate === null ? (
+            <button className="button secondary compact" onClick={() => setSchedulingDate(toLocalISODate(new Date()))}>
+              Schedule for later
+            </button>
+          ) : (
+            <span className="schedule-picker">
+              <input
+                type="date"
+                value={schedulingDate}
+                min={toLocalISODate(new Date())}
+                onChange={(e) => setSchedulingDate(e.target.value)}
+              />
+              <button className="button secondary compact" onClick={() => logCooked(schedulingDate)}>
+                Add
+              </button>
+            </span>
+          )}
+        </div>
       </section>
 
       {recipe.servings != null && servings != null && (
