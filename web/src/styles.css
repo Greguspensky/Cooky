@@ -1181,21 +1181,23 @@ p {
   margin-top: 12px;
 }
 
+.import-candidate-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.import-candidate-main input[type="checkbox"] {
+  margin-top: 4px;
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
 .import-candidate h3 {
   margin: 0 0 4px;
 }
 
 .duplicate-warning {
   color: var(--danger);
-}
-
-.import-candidate-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.import-candidate-actions .button {
-  flex: 1;
-  margin: 0;
 }
