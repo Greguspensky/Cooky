@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildMonthGrid, toLocalISODate } from "../../../../lib/cookEntries";
+import { useMainButton } from "../../hooks/useTelegramButtons";
 import {
   addCookEntry,
   deleteCookEntry,
@@ -103,6 +104,10 @@ export function CalendarTab({
     setMonthDate((d) => new Date(d.getFullYear(), d.getMonth() + delta, 1));
   }
 
+  // Matches "+ Add recipe"/"+ New list" on the other tabs: the native MainButton, not an
+  // on-page button, so the page's usable height stays consistent across tabs.
+  useMainButton("+ Add", () => setPickerOpen(true), !pickerOpen);
+
   return (
     <div className="screen">
       <h1>Calendar</h1>
@@ -147,14 +152,7 @@ export function CalendarTab({
       </div>
 
       <section className="card">
-        <div className="row-between">
-          <h2>{DAY_LABEL(selectedDate)}</h2>
-          {!pickerOpen && (
-            <button className="button secondary compact" onClick={() => setPickerOpen(true)}>
-              + Add
-            </button>
-          )}
-        </div>
+        <h2>{DAY_LABEL(selectedDate)}</h2>
 
         {pickerOpen && (
           <div className="calendar-picker">

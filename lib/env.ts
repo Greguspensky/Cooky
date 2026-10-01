@@ -40,6 +40,10 @@ export const env = {
   get claudeModelMain() {
     return required("CLAUDE_MODEL_MAIN");
   },
+  /** A cheaper/faster model for small, low-stakes tasks (e.g. grocery-list normalization). */
+  get claudeModelFast() {
+    return required("CLAUDE_MODEL_FAST");
+  },
   /**
    * Public URL of the Mini App. Defaults to this deployment's stable URL on Vercel:
    * the branch URL for previews, the production domain otherwise.
