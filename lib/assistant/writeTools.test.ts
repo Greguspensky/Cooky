@@ -111,3 +111,50 @@ describe("applyWriteTool: propose_preference_update", () => {
     expect(result).toEqual({ likes: ["garlic", "Basil"], dislikes: ["Cilantro"], diet_notes: null });
   });
 });
+
+describe("applyWriteTool: schedule_dish", () => {
+  it("marks a past date as cooked immediately", async () => {
+    const db = fakeDb([{ data: { title: "Lasagna" }, error: null }, { error: null }]);
+    vi.mocked(adminDb).mockReturnValue(db as never);
+
+    const result = await applyWriteTool(
+      action({ action_type: "schedule_dish", payload: { householdId: "h1", input: { recipe_id: "r1", date: "2000-01-01" } } }),
+    );
+
+    expect(result).toEqual({ title: "Lasagna", date: "2000-01-01", status: "cooked" });
+    const chain = vi.mocked(db.from).mock.results[0].value as { insert: ReturnType<typeof vi.fn> };
+    expect(chain.insert.mock.calls[0][0]).toMatchObject({ status: "cooked", recipe_id: "r1", household_id: "h1" });
+  });
+
+  it("marks a future date as planned", async () => {
+    const farFuture = "2999-01-01";
+    const db = fakeDb([{ data: { title: "Lasagna" }, error: null }, { error: null }]);
+    vi.mocked(adminDb).mockReturnValue(db as never);
+
+    const result = await applyWriteTool(
+      action({ action_type: "schedule_dish", payload: { householdId: "h1", input: { recipe_id: "r1", date: farFuture } } }),
+    );
+
+    expect(result).toMatchObject({ status: "planned", date: farFuture });
+  });
+
+  it("defaults to today when no date is given", async () => {
+    const db = fakeDb([{ data: { title: "Lasagna" }, error: null }, { error: null }]);
+    vi.mocked(adminDb).mockReturnValue(db as never);
+
+    const result = await applyWriteTool(
+      action({ action_type: "schedule_dish", payload: { householdId: "h1", input: { recipe_id: "r1" } } }),
+    );
+
+    expect(result).toMatchObject({ status: "cooked" });
+  });
+
+  it("throws when the recipe isn't found in this household", async () => {
+    const db = fakeDb([{ data: null, error: null }]);
+    vi.mocked(adminDb).mockReturnValue(db as never);
+
+    await expect(
+      applyWriteTool(action({ action_type: "schedule_dish", payload: { householdId: "h1", input: { recipe_id: "nope" } } })),
+    ).rejects.toThrow(/wasn't found/);
+  });
+});

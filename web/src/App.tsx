@@ -4,15 +4,17 @@ import { getStartParam, haptic } from "./telegram";
 import { RecipesTab } from "./screens/recipes/RecipesTab";
 import { GroceryListsTab } from "./screens/lists/GroceryListsTab";
 import { AssistantScreen } from "./screens/assistant/AssistantScreen";
+import { CalendarTab } from "./screens/calendar/CalendarTab";
 import { Placeholder } from "./screens/Placeholder";
 import { DevActionBar } from "./DevActionBar";
 import { setAssistantPrefill } from "./hooks/assistantPrefill";
 
-type Tab = "recipes" | "lists" | "assistant" | "import";
+type Tab = "recipes" | "lists" | "calendar" | "assistant" | "import";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "recipes", label: "Recipes", icon: "📖" },
   { id: "lists", label: "Lists", icon: "🛒" },
+  { id: "calendar", label: "Calendar", icon: "📅" },
   { id: "assistant", label: "Assistant", icon: "💬" },
   { id: "import", label: "Import", icon: "📥" },
 ];
@@ -87,6 +89,9 @@ export function App() {
         )}
         {tab === "lists" && (
           <GroceryListsTab db={auth.db} householdId={auth.user.householdId} myUserId={auth.user.id} />
+        )}
+        {tab === "calendar" && (
+          <CalendarTab db={auth.db} householdId={auth.user.householdId} myUserId={auth.user.id} />
         )}
         {tab === "assistant" && <AssistantScreen db={auth.db} />}
         {tab === "import" && <Placeholder icon="📥" title="Import" text="Cookbook PDF import arrives in phase 3." />}

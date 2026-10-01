@@ -20,9 +20,33 @@ export async function executeReadTool(
       return getPreferences(input, ctx);
     case "open_in_app":
       return openInApp(input);
+    case "get_cook_entries":
+      return getCookEntries(input, ctx);
     default:
       throw new Error(`Unknown read-only tool: ${name}`);
   }
+}
+
+async function getCookEntries(input: Record<string, unknown>, ctx: AssistantContext) {
+  let query = adminDb()
+    .from("cook_entries")
+    .select("entry_date, status, recipes(title)")
+    .eq("household_id", ctx.householdId)
+    .order("entry_date", { ascending: true })
+    .limit(50);
+
+  if (typeof input.recipe_id === "string") query = query.eq("recipe_id", input.recipe_id);
+  if (input.status === "planned" || input.status === "cooked") query = query.eq("status", input.status);
+  if (typeof input.from_date === "string") query = query.gte("entry_date", input.from_date);
+  if (typeof input.to_date === "string") query = query.lte("entry_date", input.to_date);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    recipe_title: (row.recipes as unknown as { title: string } | null)?.title ?? "(deleted recipe)",
+    date: row.entry_date,
+    status: row.status,
+  }));
 }
 
 async function searchRecipes(input: Record<string, unknown>, ctx: AssistantContext) {

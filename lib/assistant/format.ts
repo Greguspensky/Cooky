@@ -1,4 +1,5 @@
 import { adminDb } from "../db.js";
+import { statusForDate, toLocalISODate } from "../cookEntries.js";
 
 /** A short, human summary of a proposed write, shown before the user confirms it. */
 export async function describeProposedAction(toolName: string, input: Record<string, unknown>): Promise<string> {
@@ -36,6 +37,15 @@ export async function describeProposedAction(toolName: string, input: Record<str
       if (input.diet_notes) parts.push(`diet notes: "${input.diet_notes}"`);
       return `Update your preferences — ${parts.join("; ")}?`;
     }
+    case "schedule_dish": {
+      const { data } = await adminDb().from("recipes").select("title").eq("id", input.recipe_id).maybeSingle();
+      const title = data?.title ?? "that recipe";
+      const date = typeof input.date === "string" && input.date ? input.date : undefined;
+      const effectiveDate = date ?? toLocalISODate(new Date());
+      const verb = statusForDate(effectiveDate) === "cooked" ? "Log" : "Schedule";
+      const when = date ? ` on ${date}` : " today";
+      return `${verb} "${title}"${when}?`;
+    }
     default:
       return `Go ahead with this?`;
   }
@@ -52,6 +62,10 @@ export function describeAppliedAction(toolName: string, result: Record<string, u
       return `Added ${result.addedCount} item${result.addedCount === 1 ? "" : "s"} to "${result.name}". 🛒`;
     case "propose_preference_update":
       return `Updated your preferences. 👍`;
+    case "schedule_dish":
+      return result.status === "cooked"
+        ? `Logged "${result.title}" as cooked on ${result.date}. 🍽️`
+        : `Scheduled "${result.title}" for ${result.date}. 📅`;
     default:
       return "Done.";
   }

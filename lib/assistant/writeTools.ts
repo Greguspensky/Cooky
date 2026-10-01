@@ -1,4 +1,5 @@
 import { adminDb } from "../db.js";
+import { statusForDate, toLocalISODate } from "../cookEntries.js";
 import { guessStoreSection, mergeIngredients, type MergeInput } from "../grocery.js";
 import { scaleIngredients, type Ingredient, type Recipe, type RecipeStep } from "../recipe.js";
 import type { PendingAction } from "./pendingActions.js";
@@ -13,11 +14,33 @@ export async function applyWriteTool(action: PendingAction): Promise<Record<stri
       return createGroceryList(input, householdId, action.user_id);
     case "add_to_grocery_list":
       return addToGroceryList(input, householdId, action.user_id);
+    case "schedule_dish":
+      return scheduleDish(input, householdId, action.user_id);
     case "propose_preference_update":
       return updatePreferences(input, action.user_id);
     default:
       throw new Error(`Unknown write tool: ${action.action_type}`);
   }
+}
+
+async function scheduleDish(input: Record<string, unknown>, householdId: string, userId: string) {
+  const date = typeof input.date === "string" && input.date ? input.date : toLocalISODate(new Date());
+  const db = adminDb();
+
+  const recipe = await db.from("recipes").select("title").eq("id", input.recipe_id).eq("household_id", householdId).maybeSingle();
+  if (recipe.error) throw recipe.error;
+  if (!recipe.data) throw new Error("That recipe wasn't found.");
+
+  const { error } = await db.from("cook_entries").insert({
+    household_id: householdId,
+    recipe_id: input.recipe_id,
+    entry_date: date,
+    status: statusForDate(date),
+    created_by: userId,
+  });
+  if (error) throw error;
+
+  return { title: recipe.data.title, date, status: statusForDate(date) };
 }
 
 async function saveRecipe(input: Record<string, unknown>, householdId: string, userId: string) {

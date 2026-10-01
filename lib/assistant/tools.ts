@@ -51,6 +51,22 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "get_cook_entries",
+    description:
+      "Look up the household's cooking calendar: past logged dishes (history, e.g. \"how many times have " +
+      "we made lasagna\") and/or future planned ones (e.g. \"what are we cooking Friday\"). Returns each " +
+      "entry's recipe title, date and status.",
+    input_schema: {
+      type: "object",
+      properties: {
+        recipe_id: { type: "string", description: "Limit to one recipe's history." },
+        status: { type: "string", enum: ["planned", "cooked", "any"], description: "Defaults to any." },
+        from_date: { type: "string", description: "YYYY-MM-DD, inclusive." },
+        to_date: { type: "string", description: "YYYY-MM-DD, inclusive." },
+      },
+    },
+  },
+  {
     name: "save_recipe",
     description:
       "Save a new recipe to the household's collection. Only for a recipe you're proposing from general " +
@@ -134,6 +150,21 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "schedule_dish",
+    description:
+      "Log that a saved recipe was (or will be) cooked on a date. A date of today or earlier counts " +
+      "immediately as cooked (use this for \"we made lasagna today\" or backfilling something already " +
+      "made); a future date is a plan, shown on the Calendar tab, that gets confirmed as cooked later.",
+    input_schema: {
+      type: "object",
+      properties: {
+        recipe_id: { type: "string" },
+        date: { type: "string", description: "YYYY-MM-DD. Defaults to today if omitted." },
+      },
+      required: ["recipe_id"],
+    },
+  },
+  {
     name: "propose_preference_update",
     description:
       "Propose adding to the CURRENT user's own taste preferences based on something they said (e.g. " +
@@ -151,7 +182,13 @@ export const TOOLS: Anthropic.Tool[] = [
 ];
 
 /** Tool names whose call becomes a pending_action instead of executing immediately (plan §6). */
-export const WRITE_TOOLS = new Set(["save_recipe", "create_grocery_list", "add_to_grocery_list", "propose_preference_update"]);
+export const WRITE_TOOLS = new Set([
+  "save_recipe",
+  "create_grocery_list",
+  "add_to_grocery_list",
+  "schedule_dish",
+  "propose_preference_update",
+]);
 
 export function isWriteTool(name: string): boolean {
   return WRITE_TOOLS.has(name);
