@@ -22,6 +22,8 @@ export async function executeReadTool(
       return openInApp(input);
     case "get_cook_entries":
       return getCookEntries(input, ctx);
+    case "search_cookbook_candidates":
+      return searchCookbookCandidates(input, ctx);
     default:
       throw new Error(`Unknown read-only tool: ${name}`);
   }
@@ -115,6 +117,29 @@ async function getPreferences(input: Record<string, unknown>, ctx: AssistantCont
       : { likes: [], dislikes: [], diet_notes: null };
   }
   return byUser;
+}
+
+async function searchCookbookCandidates(input: Record<string, unknown>, ctx: AssistantContext) {
+  let query = adminDb()
+    .from("import_candidates")
+    .select("id, recipe, page, cookbooks!inner(id, title, household_id)")
+    .eq("cookbooks.household_id", ctx.householdId)
+    .eq("status", "pending")
+    .limit(10);
+
+  if (typeof input.cookbook_id === "string") query = query.eq("cookbook_id", input.cookbook_id);
+  if (typeof input.query === "string" && input.query.trim()) {
+    query = query.filter("recipe->>title", "ilike", `%${input.query.trim()}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    title: (row.recipe as { title: string }).title,
+    cookbook_title: (row.cookbooks as unknown as { title: string }).title,
+    page: row.page,
+  }));
 }
 
 function openInApp(input: Record<string, unknown>) {

@@ -17,7 +17,8 @@ knowledge, say clearly that it isn't saved yet and offer to save it. Keep replie
 conversational; this is a chat, not an essay. Never invent a recipe id — only use ids returned by
 search_recipes or get_recipe. You also track a cooking calendar: use get_cook_entries for "when did
 we last make X" or "what's cooking Friday", and schedule_dish to log a dish as cooked (today or a
-past date) or to plan one for a future date.`;
+past date) or to plan one for a future date. search_cookbook_candidates looks over recipes found in
+imported cookbooks that haven't been added to the collection yet — distinct from search_recipes.`;
 
 export interface AssistantTurnResult {
   conversationId: string;

@@ -1,8 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
 /**
- * Tools the assistant can call (plan §4.5), minus `search_cookbook_candidates`, which needs the
- * cookbook importer (phase 3, not built yet). Read-only tools run immediately; every other tool
+ * Tools the assistant can call (plan §4.5). Read-only tools run immediately; every other tool
  * name here must appear in WRITE_TOOLS below and returns a pending_action instead (plan §6).
  */
 export const TOOLS: Anthropic.Tool[] = [
@@ -63,6 +62,20 @@ export const TOOLS: Anthropic.Tool[] = [
         status: { type: "string", enum: ["planned", "cooked", "any"], description: "Defaults to any." },
         from_date: { type: "string", description: "YYYY-MM-DD, inclusive." },
         to_date: { type: "string", description: "YYYY-MM-DD, inclusive." },
+      },
+    },
+  },
+  {
+    name: "search_cookbook_candidates",
+    description:
+      "Search recipes found in imported cookbooks that haven't been accepted into the collection yet " +
+      "(e.g. \"what's in this book that we'd like?\"). Distinct from search_recipes, which only covers " +
+      "already-saved recipes.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Free-text search over candidate titles." },
+        cookbook_id: { type: "string", description: "Limit to one cookbook." },
       },
     },
   },

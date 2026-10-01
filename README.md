@@ -4,17 +4,17 @@ A private Telegram Mini App and bot for one household: shared recipes, cookbook 
 grocery lists, cooking mode, a cooking calendar, and an AI assistant. See the project plan for the
 full spec (the calendar is an addition beyond the original plan).
 
-**Status: phases 1–2, 4–6, plus a Calendar tab.** Recipes, shared grocery lists, step-by-step
-cooking mode, a cooking assistant, and a calendar for scheduling and logging what's been cooked.
-Phase 3 (cookbook import) is still skipped.
+**Status: phases 1–6, plus a Calendar tab.** Recipes, cookbook PDF import, shared grocery lists,
+step-by-step cooking mode, a cooking assistant, and a calendar for scheduling and logging what's
+been cooked. Only phase 7 (voice) is still skipped.
 
 ## Layout
 
 | Path | What |
 | --- | --- |
 | `web/` | Mini App front end (Vite + React + TypeScript) |
-| `api/` | Vercel serverless functions: `auth`, `bot` (Telegram webhook), `setup`, `lists/send`, `assistant/message`, `assistant/confirm` |
-| `lib/` | Code shared by the server *and* the front end: env, initData validation, JWT, users, bot, the recipe/grocery/calendar types and helpers (`recipe.ts`, `grocery.ts`, `cookEntries.ts`), and the assistant core in `assistant/` |
+| `api/` | Vercel serverless functions: `auth`, `bot` (Telegram webhook), `setup`, `lists/send`, `assistant/message`, `assistant/confirm`, `cookbooks/*` (import) |
+| `lib/` | Code shared by the server *and* the front end: env, initData validation, JWT, users, bot, the recipe/grocery/calendar/cookbook types and helpers (`recipe.ts`, `grocery.ts`, `cookEntries.ts`, `cookbook.ts`), server-only PDF splitting and extraction (`cookbookImport.ts`), and the assistant core in `assistant/` |
 | `supabase/migrations/` | SQL schema, storage buckets and RLS, applied in order |
 | `scripts/` | Local helpers (dev initData, signing key) |
 
@@ -55,13 +55,13 @@ One conversation history per person, shared between the bot and the Mini App (`c
 searches your saved recipes first and says clearly when it's suggesting something new instead.
 
 Tools it can call: `search_recipes`, `get_recipe`, `get_preferences`, `open_in_app`,
-`get_cook_entries` (the cooking calendar — "when did we last make X", "what's cooking Friday") run
-immediately (read-only). `save_recipe`, `create_grocery_list`, `add_to_grocery_list`,
-`schedule_dish` and `propose_preference_update` change data, so each one becomes a **pending
-action** instead of running right away — you see a summary with Confirm/Cancel (inline buttons in
-the bot, a card in the Mini App), and it expires after 15 minutes if you ignore it.
-`search_cookbook_candidates` from the plan isn't included: it needs the cookbook importer
-(phase 3), which is skipped for now.
+`get_cook_entries` (the cooking calendar — "when did we last make X", "what's cooking Friday"),
+`search_cookbook_candidates` (recipes found in imported cookbooks that haven't been accepted yet —
+"what's in this book that we'd like?") all run immediately (read-only). `save_recipe`,
+`create_grocery_list`, `add_to_grocery_list`, `schedule_dish` and `propose_preference_update`
+change data, so each one becomes a **pending action** instead of running right away — you see a
+summary with Confirm/Cancel (inline buttons in the bot, a card in the Mini App), and it expires
+after 15 minutes if you ignore it.
 
 `schedule_dish`'s default "today" is computed on the server (Vercel, which runs in UTC), not your
 phone's timezone — it can be off by a day right around UTC midnight if you don't give it an
@@ -113,6 +113,32 @@ date, and its last 5 dates, with shortcuts to log it for today or schedule it fo
 
 Multiple dishes can be logged on the same day — there's no separate "meal type" (breakfast/lunch/
 dinner) concept, just a list per day.
+
+### How cookbook import works
+
+Upload a PDF from the Import tab, or just send it as a document to the bot (if it's under
+Telegram's 20 MB bot-download limit; otherwise the bot points you to the app). Either way, the
+whole PDF goes to Supabase Storage, then gets split into ~15-page chunks (1 page of overlap, so a
+recipe straddling a chunk boundary still appears whole in at least one of them). Each chunk is
+sent to Claude as a native PDF attachment with a forced `extract_recipes` tool call — this handles
+scanned pages too, not just text PDFs — and the results land as `import_candidates`, not recipes
+yet.
+
+Processing happens one chunk at a time, driven by the Import tab while it's open (not a background
+job): opening a cookbook's review screen runs through its queued chunks, showing "Extracting
+recipes… (N chunks left)". If you switch tabs mid-import, it pauses; reopening that cookbook
+resumes from wherever it left off, since progress is tracked per chunk in the database. A failed
+chunk retries automatically, up to 3 attempts, before being left out of the results.
+
+The review screen lists everything found, with a ⚠ warning if its title matches a recipe you
+already have (title match only — it won't catch a renamed duplicate). **Accept** saves it and
+immediately opens it in the normal recipe editor, so you can fix anything the extraction got wrong
+before moving on; **Reject** just discards it. Recipes keep their original language — nothing is
+translated. Photos aren't extracted from the PDF (add one by hand afterward if you want it); only
+text pages.
+
+Once a cookbook has no chunks left to process, both of you get a bot message ("Import finished: N
+recipes found, ready to review") with a button straight into that cookbook's review screen.
 
 ## Setup (one time)
 
@@ -269,6 +295,23 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
       stays on (note which of your two phones it works on, since this varies by platform).
 - [ ] Tap **‹ Previous** and the phone's own back gesture/BackButton; confirm one moves a step back
       and the other exits cooking mode to the recipe.
+
+**Phase 3 (cookbook import):**
+- [ ] From the Import tab, tap **+ Upload PDF** and pick a real cookbook PDF; confirm it opens the
+      review screen and shows "Extracting recipes… (N chunks left)" counting down.
+- [ ] Once it finishes, confirm both of you get a bot message with a **Review recipes** button that
+      opens straight into that cookbook's review screen.
+- [ ] On the review screen, **Accept** a candidate; confirm it opens the normal recipe editor
+      prefilled with the extracted title/ingredients/steps, and saving adds it to your Recipes tab.
+- [ ] **Reject** another candidate; confirm it disappears from the list and isn't added anywhere.
+- [ ] If the cookbook includes a recipe you already have saved, confirm its card shows the ⚠
+      possible-duplicate warning.
+- [ ] Send a small PDF as a document straight to the bot; confirm it replies with a chunk count and
+      a button into that cookbook's review screen.
+- [ ] Send an oversized PDF (over 20 MB) to the bot; confirm it points you to the Import tab instead
+      of trying to download it.
+- [ ] Switch away from the Import tab mid-extraction, then come back and reopen that cookbook;
+      confirm it resumes from where it left off rather than restarting.
 
 ## Local development
 
