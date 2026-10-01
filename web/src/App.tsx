@@ -6,6 +6,7 @@ import { GroceryListsTab } from "./screens/lists/GroceryListsTab";
 import { AssistantScreen } from "./screens/assistant/AssistantScreen";
 import { CalendarTab } from "./screens/calendar/CalendarTab";
 import { ImportTab } from "./screens/import/ImportTab";
+import { OnboardingScreen, shouldShowOnboarding } from "./screens/onboarding/OnboardingScreen";
 import { DevActionBar } from "./DevActionBar";
 import { setAssistantPrefill } from "./hooks/assistantPrefill";
 
@@ -35,6 +36,8 @@ export function App() {
   const [auth, setAuth] = useState<AuthResult | "loading">("loading");
   const [tab, setTab] = useState<Tab>(() => tabForStartParam(getStartParam()));
   const [initialCookbookId] = useState<string | undefined>(() => cookbookIdForStartParam(getStartParam()));
+  // Skip the intro if we arrived via a deep link (bot button, etc.) — that's not a first visit.
+  const [showOnboarding, setShowOnboarding] = useState(() => !getStartParam() && shouldShowOnboarding());
 
   const load = () => {
     setAuth("loading");
@@ -78,6 +81,17 @@ export function App() {
         <button className="button" onClick={load}>
           Try again
         </button>
+      </div>
+    );
+  }
+
+  if (showOnboarding) {
+    return (
+      <div className="app">
+        <main className="content">
+          <OnboardingScreen onDone={() => setShowOnboarding(false)} />
+        </main>
+        <DevActionBar />
       </div>
     );
   }

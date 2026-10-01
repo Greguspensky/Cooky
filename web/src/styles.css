@@ -1201,3 +1201,43 @@ p {
 .duplicate-warning {
   color: var(--danger);
 }
+
+.onboarding {
+  min-height: 80vh;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.onboarding-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  margin-bottom: 8px;
+}
+
+.onboarding-text {
+  color: var(--hint);
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--section-bg);
+}
+
+.onboarding-dot.active {
+  background: var(--accent);
+}
