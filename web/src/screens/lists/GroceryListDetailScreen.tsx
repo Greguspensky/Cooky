@@ -14,7 +14,6 @@ import {
   addGroceryItem,
   deleteGroceryItem,
   fetchGroceryList,
-  normalizeListForShopping,
   sendListToChat,
   setItemChecked,
   setItemSection,
@@ -41,7 +40,6 @@ export function GroceryListDetailScreen({
   const [items, setItems] = useState<GroceryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [normalizing, setNormalizing] = useState(false);
   const [newItem, setNewItem] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState({ item: "", qty: "", unit: "" });
@@ -129,20 +127,6 @@ export function GroceryListDetailScreen({
     }
   }
 
-  async function normalize() {
-    setNormalizing(true);
-    setError(null);
-    try {
-      const { updated } = await normalizeListForShopping(listId);
-      haptic(updated > 0 ? "success" : "tap");
-      if (updated > 0) reload();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't normalize the list.");
-    } finally {
-      setNormalizing(false);
-    }
-  }
-
   async function addItem() {
     const text = newItem.trim();
     if (!text) return;
@@ -212,12 +196,6 @@ export function GroceryListDetailScreen({
       </div>
 
       {items.length === 0 && <p className="muted">No items yet.</p>}
-
-      {list.status === "active" && items.length > 0 && (
-        <button type="button" className="button secondary compact" disabled={normalizing} onClick={normalize}>
-          {normalizing ? "Checking quantities…" : "🧺 Make shopping-friendly"}
-        </button>
-      )}
 
       {grouped.map(([section, sectionItems]) => (
         <section className="card" key={section}>

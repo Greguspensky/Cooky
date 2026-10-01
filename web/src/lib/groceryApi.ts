@@ -162,16 +162,3 @@ export async function sendListToChat(listId: string): Promise<{ sent: number; of
   if (!response.ok) throw new Error(`Couldn't send the list (${response.status}).`);
   return response.json();
 }
-
-/** Rewrites unchecked items into shop-buyable quantities via Claude. Goes through /api since it
- * needs the Anthropic key. */
-export async function normalizeListForShopping(listId: string): Promise<{ updated: number }> {
-  const token = await getAccessToken();
-  const response = await fetch("/api/lists/normalize", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ listId }),
-  });
-  if (!response.ok) throw new Error(`Couldn't normalize the list (${response.status}).`);
-  return response.json();
-}
