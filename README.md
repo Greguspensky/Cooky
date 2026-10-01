@@ -31,6 +31,16 @@ been cooked. Only phase 7 (voice) is still skipped.
 
 The bot rejects anyone outside the allowlist before any handler runs.
 
+### How the intro works
+
+Not in the original plan — added afterward. The first time the app opens on a device (tracked via
+`localStorage`, so it's per-phone, not per-person), a short slideshow introduces Cookie and its
+main features before showing the normal tabs: **Next**/**Get started** is the MainButton,
+**‹ Back** moves to the previous slide, and **Skip** jumps straight in. It's skipped entirely if
+the app was opened via a deep link (a bot button), since that implies you've already used it. If
+you ever want to see it again on your own phone, clear the Mini App's site data in Telegram (or
+just `localStorage.removeItem("cookie_onboarding_seen")` in dev tools).
+
 ### How grocery lists work
 
 Recipe CRUD and grocery-list edits go straight from the browser to Supabase, scoped by RLS, same
@@ -219,6 +229,14 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
 - [ ] The menu button and the Open button both open the app and show your name.
 - [ ] The app follows Telegram's light/dark theme.
 - [ ] Any other account: the bot replies "private app", and the Mini App shows **Private app**.
+
+**Intro:**
+- [ ] The very first time you open the app (fresh install, or after clearing the Mini App's site
+      data), confirm the Cookie intro slideshow appears before the normal tabs.
+- [ ] Tap **Next** through all the slides to **Get started**; confirm it lands on the Recipes tab.
+- [ ] Close and reopen the app; confirm the intro does *not* show again.
+- [ ] Open it again via a bot button (e.g. a grocery list link); confirm the intro is skipped even
+      if you haven't seen it on that device yet.
 
 **Phase 2 (recipes):**
 - [ ] Add a recipe with a few ingredients and steps; it shows up in the list.
