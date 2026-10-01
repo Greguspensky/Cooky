@@ -45,11 +45,8 @@ LLM-assisted fuzzy merge arrives with the assistant (phase 6), which needs `ANTH
 anyway. Each item's store aisle is a keyword guess (`guessStoreSection` in `lib/grocery.ts`,
 English-only for now); tap its dropdown to fix a wrong guess.
 
-Tap an item's text to edit its name/quantity/unit directly (e.g. turn a recipe's "2 tbsp
-mayonnaise" into "1 jar mayonnaise" by hand). **🧺 Make shopping-friendly** does the same thing for
-the whole list at once, using Claude (the fast model, `CLAUDE_MODEL_FAST`) to rewrite recipe-style
-quantities into what you'd actually buy at the shop — it only changes items it's confident about
-and leaves the rest alone.
+Tap an item's text to edit its name/quantity/unit directly — e.g. turn a recipe's "2 tbsp
+mayonnaise" into "1 jar mayonnaise" by hand if you need the shop-buyable quantity instead.
 
 ### How the assistant works
 
@@ -164,7 +161,6 @@ Vercel → Project → **Settings → Environment Variables** (Production and Pr
 | `SUPABASE_JWT_SECRET` or `SUPABASE_JWT_PRIVATE_KEY` | See step 2 |
 | `ANTHROPIC_API_KEY` | From [console.anthropic.com](https://console.anthropic.com) → API Keys |
 | `CLAUDE_MODEL_MAIN` | A current Claude model id, e.g. `claude-sonnet-5` — check Anthropic's docs for the latest, since names change over time |
-| `CLAUDE_MODEL_FAST` | A cheaper/faster Claude model id (e.g. a Haiku variant) for small, low-stakes tasks like grocery-list normalization |
 | `MINI_APP_URL` | Optional. Defaults to the production domain (or the branch URL on previews) |
 
 The OpenAI key isn't needed until phase 7 (voice). Redeploy after changing variables.
@@ -224,11 +220,8 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
 - [ ] On a recipe's page, tap **+ Add to list** and add it to an existing active list; confirm the
       ingredients land there at the servings shown on the page.
 - [ ] From the same panel, add a recipe as a **new list** and confirm it's named after the recipe.
-- [ ] Tap an item's text to edit it; change its quantity/unit/name and confirm **Save** updates the
-      line (and **Cancel** discards your edit).
-- [ ] On a list with recipe-style quantities (e.g. "2 tbsp mayonnaise"), tap
-      **🧺 Make shopping-friendly** and confirm it rewrites at least one item into a shop-buyable
-      quantity (e.g. "1 jar") without touching items it isn't confident about.
+- [ ] Tap an item's text to edit it; change its quantity/unit/name (e.g. "2 tbsp mayonnaise" to
+      "1 jar mayonnaise") and confirm **Save** updates the line (and **Cancel** discards your edit).
 
 **Phase 6 (assistant):**
 - [ ] In the bot, ask "what can I make with [an ingredient from a saved recipe]?" — it should
