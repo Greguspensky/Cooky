@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { useBackButton } from "../../hooks/useTelegramButtons";
+import { useBackButton, useMainButton } from "../../hooks/useTelegramButtons";
 import {
   acceptCandidate,
   fetchCookbook,
@@ -10,14 +10,10 @@ import {
   type Cookbook,
   type ImportCandidate,
 } from "../../lib/cookbooksApi";
-import { listCuisinesAndTags } from "../../lib/recipesApi";
 import { haptic } from "../../telegram";
-import { RecipeFormScreen } from "../recipes/RecipeFormScreen";
 
 export function CookbookReviewScreen({
   db,
-  householdId,
-  myUserId,
   cookbookId,
   onBack,
 }: {
@@ -29,23 +25,20 @@ export function CookbookReviewScreen({
 }) {
   const [cookbook, setCookbook] = useState<Cookbook | null>(null);
   const [candidates, setCandidates] = useState<ImportCandidate[] | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState<{ remaining: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   const runningRef = useRef(false);
 
   function reloadCandidates() {
     listPendingCandidates(db, cookbookId)
-      .then(setCandidates)
+      .then((rows) => {
+        setCandidates(rows);
+        setSelected(new Set(rows.map((r) => r.id))); // all checked by default; uncheck the ones you don't want
+      })
       .catch((e) => setError(e instanceof Error ? e.message : "Couldn't load the recipes found."));
   }
-
-  useEffect(() => {
-    listCuisinesAndTags(db)
-      .then(({ tags }) => setTagSuggestions(tags))
-      .catch(() => {});
-  }, [db]);
 
   useEffect(() => {
     if (runningRef.current) return;
@@ -73,45 +66,40 @@ export function CookbookReviewScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [db, cookbookId]);
 
-  async function accept(candidate: ImportCandidate) {
+  function toggle(id: string) {
     haptic("tap");
-    try {
-      const { recipeId } = await acceptCandidate(candidate.id);
-      setCandidates((rows) => rows?.filter((r) => r.id !== candidate.id) ?? null);
-      setEditingRecipeId(recipeId);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't accept that recipe.");
-    }
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
-  async function reject(candidate: ImportCandidate) {
-    haptic("tap");
-    setCandidates((rows) => rows?.filter((r) => r.id !== candidate.id) ?? null);
+  async function submit() {
+    if (!candidates) return;
+    setSubmitting(true);
+    setError(null);
+    const toAccept = candidates.filter((c) => selected.has(c.id));
+    const toReject = candidates.filter((c) => !selected.has(c.id));
     try {
-      await rejectCandidate(candidate.id);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't reject that recipe.");
+      await Promise.all([...toAccept.map((c) => acceptCandidate(c.id)), ...toReject.map((c) => rejectCandidate(c.id))]);
+      haptic("success");
       reloadCandidates();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't save your choices.");
+      reloadCandidates();
+    } finally {
+      setSubmitting(false);
     }
   }
 
-  useBackButton(editingRecipeId ? () => setEditingRecipeId(null) : onBack);
-
-  if (editingRecipeId) {
-    return (
-      <RecipeFormScreen
-        db={db}
-        householdId={householdId}
-        myUserId={myUserId}
-        recipeId={editingRecipeId}
-        tagSuggestions={tagSuggestions}
-        onSaved={() => setEditingRecipeId(null)}
-        onCancel={() => setEditingRecipeId(null)}
-      />
-    );
-  }
+  useBackButton(onBack);
 
   const stillProcessing = cookbook && (cookbook.status === "uploaded" || cookbook.status === "processing");
+  const canSubmit = cookbook?.status === "ready" && candidates !== null && candidates.length > 0 && !submitting;
+  const mainButtonText = submitting ? "Adding…" : selected.size === 0 ? "Discard all" : `Add ${selected.size} selected`;
+  useMainButton(mainButtonText, submit, canSubmit);
 
   return (
     <div className="screen">
@@ -130,34 +118,34 @@ export function CookbookReviewScreen({
         <div className="center">
           <div className="emoji">🍽️</div>
           <h2>Nothing left to review</h2>
-          <p className="muted">Every recipe found in this cookbook has been accepted or rejected.</p>
+          <p className="muted">Every recipe found in this cookbook has been added or discarded.</p>
         </div>
       )}
 
       {candidates && candidates.length > 0 && (
-        <ul className="import-candidate-list">
-          {candidates.map((c) => (
-            <li key={c.id} className="card import-candidate">
-              <h3>{c.recipe.title}</h3>
-              <p className="muted">
-                {c.recipe.ingredients.length} ingredient{c.recipe.ingredients.length === 1 ? "" : "s"} ·{" "}
-                {c.recipe.steps.length} step{c.recipe.steps.length === 1 ? "" : "s"}
-                {c.page != null ? ` · page ${c.page}` : ""}
-              </p>
-              {c.duplicate_recipe && (
-                <p className="muted duplicate-warning">⚠ Possibly already have "{c.duplicate_recipe.title}"</p>
-              )}
-              <div className="import-candidate-actions">
-                <button type="button" className="button secondary compact" onClick={() => reject(c)}>
-                  Reject
-                </button>
-                <button type="button" className="button compact" onClick={() => accept(c)}>
-                  Accept
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <>
+          <p className="muted">Everything's checked by default — uncheck anything you don't want.</p>
+          <ul className="import-candidate-list">
+            {candidates.map((c) => (
+              <li key={c.id} className="card import-candidate">
+                <label className="import-candidate-main">
+                  <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggle(c.id)} />
+                  <div>
+                    <h3>{c.recipe.title}</h3>
+                    <p className="muted">
+                      {c.recipe.ingredients.length} ingredient{c.recipe.ingredients.length === 1 ? "" : "s"} ·{" "}
+                      {c.recipe.steps.length} step{c.recipe.steps.length === 1 ? "" : "s"}
+                      {c.page != null ? ` · page ${c.page}` : ""}
+                    </p>
+                    {c.duplicate_recipe && (
+                      <p className="muted duplicate-warning">⚠ Possibly already have "{c.duplicate_recipe.title}"</p>
+                    )}
+                  </div>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );

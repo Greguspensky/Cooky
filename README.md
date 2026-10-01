@@ -130,12 +130,13 @@ recipes… (N chunks left)". If you switch tabs mid-import, it pauses; reopening
 resumes from wherever it left off, since progress is tracked per chunk in the database. A failed
 chunk retries automatically, up to 3 attempts, before being left out of the results.
 
-The review screen lists everything found, with a ⚠ warning if its title matches a recipe you
-already have (title match only — it won't catch a renamed duplicate). **Accept** saves it and
-immediately opens it in the normal recipe editor, so you can fix anything the extraction got wrong
-before moving on; **Reject** just discards it. Recipes keep their original language — nothing is
-translated. Photos aren't extracted from the PDF (add one by hand afterward if you want it); only
-text pages.
+The review screen lists everything found, each with a checkbox (checked by default) and a ⚠
+warning if its title matches a recipe you already have (title match only — it won't catch a
+renamed duplicate). Uncheck anything you don't want, then tap **Add N selected** (the native
+MainButton) to save the checked ones to your collection and discard the rest in one go — there's
+no per-recipe edit step at this point; fix anything the extraction got wrong afterward from the
+Recipes tab like any other recipe. Recipes keep their original language — nothing is translated.
+Photos aren't extracted from the PDF (add one by hand afterward if you want it); only text pages.
 
 Once a cookbook has no chunks left to process, both of you get a bot message ("Import finished: N
 recipes found, ready to review") with a button straight into that cookbook's review screen.
@@ -301,9 +302,10 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
       review screen and shows "Extracting recipes… (N chunks left)" counting down.
 - [ ] Once it finishes, confirm both of you get a bot message with a **Review recipes** button that
       opens straight into that cookbook's review screen.
-- [ ] On the review screen, **Accept** a candidate; confirm it opens the normal recipe editor
-      prefilled with the extracted title/ingredients/steps, and saving adds it to your Recipes tab.
-- [ ] **Reject** another candidate; confirm it disappears from the list and isn't added anywhere.
+- [ ] On the review screen, confirm every candidate starts checked; uncheck one and confirm the
+      MainButton updates to "Add N selected" with the right count.
+- [ ] Tap **Add N selected**; confirm the checked recipes appear on your Recipes tab (with their
+      extracted title/ingredients/steps) and the unchecked one doesn't, anywhere.
 - [ ] If the cookbook includes a recipe you already have saved, confirm its card shows the ⚠
       possible-duplicate warning.
 - [ ] Send a small PDF as a document straight to the bot; confirm it replies with a chunk count and
