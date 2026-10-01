@@ -131,6 +131,16 @@ export async function setItemSection(db: SupabaseClient, itemId: string, section
   if (error) throw error;
 }
 
+/** Direct edit of an item's name/quantity — e.g. fixing "2 tbsp mayonnaise" to "1 jar mayonnaise" by hand. */
+export async function updateGroceryItem(
+  db: SupabaseClient,
+  itemId: string,
+  patch: { item: string; qty: number | null; unit: string | null },
+): Promise<void> {
+  const { error } = await db.from("grocery_items").update(patch).eq("id", itemId);
+  if (error) throw error;
+}
+
 export async function deleteGroceryItem(db: SupabaseClient, itemId: string): Promise<void> {
   const { error } = await db.from("grocery_items").delete().eq("id", itemId);
   if (error) throw error;
@@ -150,5 +160,18 @@ export async function sendListToChat(listId: string): Promise<{ sent: number; of
     body: JSON.stringify({ listId }),
   });
   if (!response.ok) throw new Error(`Couldn't send the list (${response.status}).`);
+  return response.json();
+}
+
+/** Rewrites unchecked items into shop-buyable quantities via Claude. Goes through /api since it
+ * needs the Anthropic key. */
+export async function normalizeListForShopping(listId: string): Promise<{ updated: number }> {
+  const token = await getAccessToken();
+  const response = await fetch("/api/lists/normalize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ listId }),
+  });
+  if (!response.ok) throw new Error(`Couldn't normalize the list (${response.status}).`);
   return response.json();
 }

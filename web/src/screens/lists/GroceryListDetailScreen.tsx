@@ -14,11 +14,13 @@ import {
   addGroceryItem,
   deleteGroceryItem,
   fetchGroceryList,
+  normalizeListForShopping,
   sendListToChat,
   setItemChecked,
   setItemSection,
   setListStatus,
   sortItems,
+  updateGroceryItem,
 } from "../../lib/groceryApi";
 import { haptic } from "../../telegram";
 
@@ -39,7 +41,10 @@ export function GroceryListDetailScreen({
   const [items, setItems] = useState<GroceryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [normalizing, setNormalizing] = useState(false);
   const [newItem, setNewItem] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState({ item: "", qty: "", unit: "" });
 
   function reload() {
     fetchGroceryList(db, listId)
@@ -98,6 +103,43 @@ export function GroceryListDetailScreen({
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't remove that item.");
       reload();
+    }
+  }
+
+  function startEdit(item: GroceryItem) {
+    setEditingId(item.id);
+    setEditDraft({ item: item.item, qty: item.qty != null ? String(item.qty) : "", unit: item.unit ?? "" });
+  }
+
+  async function saveEdit() {
+    if (!editingId) return;
+    const text = editDraft.item.trim();
+    if (!text) return;
+    const id = editingId;
+    setEditingId(null);
+    try {
+      await updateGroceryItem(db, id, {
+        item: text,
+        qty: editDraft.qty.trim() ? Number(editDraft.qty) : null,
+        unit: editDraft.unit.trim() || null,
+      });
+      reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't save that change.");
+    }
+  }
+
+  async function normalize() {
+    setNormalizing(true);
+    setError(null);
+    try {
+      const { updated } = await normalizeListForShopping(listId);
+      haptic(updated > 0 ? "success" : "tap");
+      if (updated > 0) reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't normalize the list.");
+    } finally {
+      setNormalizing(false);
     }
   }
 
@@ -171,43 +213,89 @@ export function GroceryListDetailScreen({
 
       {items.length === 0 && <p className="muted">No items yet.</p>}
 
+      {list.status === "active" && items.length > 0 && (
+        <button type="button" className="button secondary compact" disabled={normalizing} onClick={normalize}>
+          {normalizing ? "Checking quantities…" : "🧺 Make shopping-friendly"}
+        </button>
+      )}
+
       {grouped.map(([section, sectionItems]) => (
         <section className="card" key={section}>
           <h2>{STORE_SECTION_LABELS[section]}</h2>
           <ul className="grocery-item-list">
-            {sectionItems.map((item) => (
-              <li key={item.id} className={item.checked ? "grocery-item checked" : "grocery-item"}>
-                <label className="grocery-item-main">
-                  <input type="checkbox" checked={item.checked} onChange={() => toggle(item)} />
-                  <span>
-                    {item.qty != null && (
-                      <strong>
-                        {item.qty}
-                        {item.unit ? ` ${item.unit}` : ""}{" "}
-                      </strong>
-                    )}
-                    {item.item}
-                  </span>
-                </label>
-                <div className="grocery-item-meta">
-                  {item.checked_by && membersById.get(item.checked_by) && (
-                    <span className="avatar small" title={membersById.get(item.checked_by)!.display_name}>
-                      {membersById.get(item.checked_by)!.display_name.charAt(0).toUpperCase()}
+            {sectionItems.map((item) =>
+              editingId === item.id ? (
+                <li key={item.id} className="grocery-item editing">
+                  <div className="edit-item-row">
+                    <input
+                      className="qty"
+                      placeholder="Qty"
+                      inputMode="decimal"
+                      value={editDraft.qty}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, qty: e.target.value }))}
+                    />
+                    <input
+                      className="unit"
+                      placeholder="Unit"
+                      value={editDraft.unit}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, unit: e.target.value }))}
+                    />
+                    <input
+                      className="item"
+                      placeholder="Item"
+                      value={editDraft.item}
+                      onChange={(e) => setEditDraft((d) => ({ ...d, item: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveEdit();
+                      }}
+                    />
+                  </div>
+                  <div className="edit-item-actions">
+                    <button type="button" className="button secondary compact" onClick={() => setEditingId(null)}>
+                      Cancel
+                    </button>
+                    <button type="button" className="button compact" onClick={saveEdit}>
+                      Save
+                    </button>
+                  </div>
+                </li>
+              ) : (
+                <li key={item.id} className={item.checked ? "grocery-item checked" : "grocery-item"}>
+                  <label className="grocery-item-main">
+                    <input type="checkbox" checked={item.checked} onChange={() => toggle(item)} />
+                    <span onClick={() => startEdit(item)}>
+                      {item.qty != null && (
+                        <strong>
+                          {item.qty}
+                          {item.unit ? ` ${item.unit}` : ""}{" "}
+                        </strong>
+                      )}
+                      {item.item}
                     </span>
-                  )}
-                  <select value={item.store_section} onChange={(e) => changeSection(item, e.target.value as StoreSection)}>
-                    {STORE_SECTION_ORDER.map((s) => (
-                      <option key={s} value={s}>
-                        {STORE_SECTION_LABELS[s]}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="button" className="remove" onClick={() => removeItem(item)} aria-label="Remove item">
-                    ×
-                  </button>
-                </div>
-              </li>
-            ))}
+                  </label>
+                  <div className="grocery-item-meta">
+                    {item.checked_by && membersById.get(item.checked_by) && (
+                      <span className="avatar small" title={membersById.get(item.checked_by)!.display_name}>
+                        {membersById.get(item.checked_by)!.display_name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <select value={item.store_section} onChange={(e) => changeSection(item, e.target.value as StoreSection)}>
+                      {STORE_SECTION_ORDER.map((s) => (
+                        <option key={s} value={s}>
+                          {STORE_SECTION_LABELS[s]}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" className="edit-icon" onClick={() => startEdit(item)} aria-label="Edit item">
+                      ✎
+                    </button>
+                    <button type="button" className="remove" onClick={() => removeItem(item)} aria-label="Remove item">
+                      ×
+                    </button>
+                  </div>
+                </li>
+              ),
+            )}
           </ul>
         </section>
       ))}

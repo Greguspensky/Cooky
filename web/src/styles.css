@@ -838,6 +838,46 @@ p {
   font-size: 11px;
 }
 
+.edit-icon {
+  border: 0;
+  background: none;
+  color: var(--hint);
+  font-size: 14px;
+  padding: 2px;
+}
+
+.grocery-item.editing {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.edit-item-row {
+  display: grid;
+  grid-template-columns: 56px 64px 1fr;
+  gap: 6px;
+}
+
+.edit-item-row input {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--hint) 30%, transparent);
+  background: var(--secondary-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.edit-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-item-actions .button {
+  flex: 1;
+  margin: 0;
+}
+
 /* Cooking history (on a recipe's page) */
 
 .history-dates {

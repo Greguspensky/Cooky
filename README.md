@@ -45,6 +45,12 @@ LLM-assisted fuzzy merge arrives with the assistant (phase 6), which needs `ANTH
 anyway. Each item's store aisle is a keyword guess (`guessStoreSection` in `lib/grocery.ts`,
 English-only for now); tap its dropdown to fix a wrong guess.
 
+Tap an item's text to edit its name/quantity/unit directly (e.g. turn a recipe's "2 tbsp
+mayonnaise" into "1 jar mayonnaise" by hand). **🧺 Make shopping-friendly** does the same thing for
+the whole list at once, using Claude (the fast model, `CLAUDE_MODEL_FAST`) to rewrite recipe-style
+quantities into what you'd actually buy at the shop — it only changes items it's confident about
+and leaves the rest alone.
+
 ### How the assistant works
 
 One conversation history per person, shared between the bot and the Mini App (`conversations` /
@@ -103,9 +109,10 @@ on the Calendar, until you tap **Mark cooked** on it (only offered once its date
 plan that never happened doesn't inflate the count).
 
 The Calendar tab is a month grid (dot = at least one entry that day) with the selected day's dishes
-listed below it; **+ Add** searches your recipes and logs the pick for that day. A recipe's own page
-shows how many times it's been cooked, its most recent date, and its last 5 dates, with shortcuts to
-log it for today or schedule it for a future date.
+listed below it; **+ Add** (the native Telegram MainButton, same as "+ Add recipe" on Recipes and
+"+ New list" on Lists, so page height stays consistent across tabs) searches your recipes and logs
+the pick for that day. A recipe's own page shows how many times it's been cooked, its most recent
+date, and its last 5 dates, with shortcuts to log it for today or schedule it for a future date.
 
 Multiple dishes can be logged on the same day — there's no separate "meal type" (breakfast/lunch/
 dinner) concept, just a list per day.
@@ -157,6 +164,7 @@ Vercel → Project → **Settings → Environment Variables** (Production and Pr
 | `SUPABASE_JWT_SECRET` or `SUPABASE_JWT_PRIVATE_KEY` | See step 2 |
 | `ANTHROPIC_API_KEY` | From [console.anthropic.com](https://console.anthropic.com) → API Keys |
 | `CLAUDE_MODEL_MAIN` | A current Claude model id, e.g. `claude-sonnet-5` — check Anthropic's docs for the latest, since names change over time |
+| `CLAUDE_MODEL_FAST` | A cheaper/faster Claude model id (e.g. a Haiku variant) for small, low-stakes tasks like grocery-list normalization |
 | `MINI_APP_URL` | Optional. Defaults to the production domain (or the branch URL on previews) |
 
 The OpenAI key isn't needed until phase 7 (voice). Redeploy after changing variables.
@@ -216,6 +224,11 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
 - [ ] On a recipe's page, tap **+ Add to list** and add it to an existing active list; confirm the
       ingredients land there at the servings shown on the page.
 - [ ] From the same panel, add a recipe as a **new list** and confirm it's named after the recipe.
+- [ ] Tap an item's text to edit it; change its quantity/unit/name and confirm **Save** updates the
+      line (and **Cancel** discards your edit).
+- [ ] On a list with recipe-style quantities (e.g. "2 tbsp mayonnaise"), tap
+      **🧺 Make shopping-friendly** and confirm it rewrites at least one item into a shop-buyable
+      quantity (e.g. "1 jar") without touching items it isn't confident about.
 
 **Phase 6 (assistant):**
 - [ ] In the bot, ask "what can I make with [an ingredient from a saved recipe]?" — it should
@@ -236,6 +249,9 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
 - [ ] Ask it "what's cooking [a day you've scheduled something for]"; confirm it answers correctly.
 
 **Calendar:**
+- [ ] On the Calendar tab, confirm **+ Add** appears as the native Telegram button at the bottom of
+      the screen (same spot/style as "+ Add recipe" on Recipes and "+ New list" on Lists), not an
+      on-page button, and that the page height matches those tabs.
 - [ ] On the Calendar tab, tap today, **+ Add**, and log a dish; confirm a dot appears on that day
       and the dish is listed below with a "Cooked" chip.
 - [ ] Tap a future day, add a dish there; confirm it shows a "Planned" chip and no **Mark cooked**
