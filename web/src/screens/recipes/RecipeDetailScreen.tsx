@@ -309,12 +309,9 @@ export function RecipeDetailScreen({
           </>
         )}
         <div className="history-actions">
-          <button className="button secondary compact" onClick={() => logCooked(toLocalISODate(new Date()))}>
-            Log as cooked today
-          </button>
           {schedulingDate === null ? (
             <button className="button secondary compact" onClick={() => setSchedulingDate(toLocalISODate(new Date()))}>
-              Log for another date
+              Log a date
             </button>
           ) : (
             <span className="schedule-picker">
