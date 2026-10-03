@@ -119,7 +119,8 @@ The Calendar tab is a month grid (dot = at least one entry that day) with the se
 listed below it; **+ Add** (the native Telegram MainButton, same as "+ Add recipe" on Recipes and
 "+ New list" on Lists, so page height stays consistent across tabs) searches your recipes and logs
 the pick for that day. A recipe's own page shows how many times it's been cooked, its most recent
-date, and its last 5 dates, with shortcuts to log it for today or schedule it for a future date.
+date, and its last 5 dates, with shortcuts to log it as cooked today or for any other date — past
+(backfilling something you forgot to log), today, or future (a plan).
 
 Multiple dishes can be logged on the same day — there's no separate "meal type" (breakfast/lunch/
 dinner) concept, just a list per day.
@@ -294,8 +295,9 @@ Optional: in @BotFather, `/newapp` creates a `t.me/<bot>/<app>` link for sharing
       and the dish is listed below with a "Cooked" chip.
 - [ ] Tap a future day, add a dish there; confirm it shows a "Planned" chip and no **Mark cooked**
       button yet (only offered once the date arrives).
-- [ ] On a recipe's page, use **Log as cooked today** and **Schedule for later**; confirm the
-      Cooking history count, last-cooked date and date list all update correctly.
+- [ ] On a recipe's page, use **Log as cooked today** and **Log for another date**, picking a date
+      from last week; confirm it's immediately marked cooked (not planned) and the Cooking history
+      count, last-cooked date and date list all update correctly.
 - [ ] Add a dish from the Calendar tab on one phone; confirm it shows up for your wife too (it's
       shared household data, like grocery lists).
 
