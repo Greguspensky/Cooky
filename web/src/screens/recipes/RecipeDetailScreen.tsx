@@ -314,16 +314,11 @@ export function RecipeDetailScreen({
           </button>
           {schedulingDate === null ? (
             <button className="button secondary compact" onClick={() => setSchedulingDate(toLocalISODate(new Date()))}>
-              Schedule for later
+              Log for another date
             </button>
           ) : (
             <span className="schedule-picker">
-              <input
-                type="date"
-                value={schedulingDate}
-                min={toLocalISODate(new Date())}
-                onChange={(e) => setSchedulingDate(e.target.value)}
-              />
+              <input type="date" value={schedulingDate} onChange={(e) => setSchedulingDate(e.target.value)} />
               <button className="button secondary compact" onClick={() => logCooked(schedulingDate)}>
                 Add
               </button>
