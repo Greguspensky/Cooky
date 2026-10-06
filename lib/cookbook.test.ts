@@ -6,11 +6,12 @@ describe("buildChunkRanges", () => {
     expect(buildChunkRanges(10)).toEqual([{ pageStart: 1, pageEnd: 10 }]);
   });
 
-  it("splits into 15-page chunks with a 1-page overlap", () => {
+  it("splits into 10-page chunks with a 1-page overlap", () => {
     expect(buildChunkRanges(30)).toEqual([
-      { pageStart: 1, pageEnd: 15 },
-      { pageStart: 15, pageEnd: 29 },
-      { pageStart: 29, pageEnd: 30 },
+      { pageStart: 1, pageEnd: 10 },
+      { pageStart: 10, pageEnd: 19 },
+      { pageStart: 19, pageEnd: 28 },
+      { pageStart: 28, pageEnd: 30 },
     ]);
   });
 

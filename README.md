@@ -129,11 +129,12 @@ dinner) concept, just a list per day.
 
 Upload a PDF from the Import tab, or just send it as a document to the bot (if it's under
 Telegram's 20 MB bot-download limit; otherwise the bot points you to the app). Either way, the
-whole PDF goes to Supabase Storage, then gets split into ~15-page chunks (1 page of overlap, so a
-recipe straddling a chunk boundary still appears whole in at least one of them). Each chunk is
-sent to Claude as a native PDF attachment with a forced `extract_recipes` tool call — this handles
-scanned pages too, not just text PDFs — and the results land as `import_candidates`, not recipes
-yet.
+whole PDF goes to Supabase Storage, then gets split into ~10-page chunks (1 page of overlap, so a
+recipe straddling a chunk boundary still appears whole in at least one of them — kept deliberately
+small since a dense cookbook page can need thousands of output tokens to transcribe in full). Each
+chunk is sent to Claude as a native PDF attachment with a forced `extract_recipes` tool call — this
+handles scanned pages too, not just text PDFs — and the results land as `import_candidates`, not
+recipes yet.
 
 Processing happens one chunk at a time, driven by the Import tab while it's open (not a background
 job): opening a cookbook's review screen runs through its queued chunks, showing "Extracting

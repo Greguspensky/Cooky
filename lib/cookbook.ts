@@ -7,7 +7,9 @@ export interface PageRange {
   pageEnd: number;
 }
 
-const CHUNK_SIZE = 15;
+// A dense cookbook (several full recipes per page) can need thousands of output tokens per page
+// to transcribe in full — a smaller chunk leaves more max_tokens headroom per recipe.
+const CHUNK_SIZE = 10;
 const CHUNK_OVERLAP = 1;
 
 /**
