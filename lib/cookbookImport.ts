@@ -72,12 +72,18 @@ const EXTRACT_PROMPT =
   "recipe in its original language. Only include a step's timer by writing the duration in its " +
   "text, exactly as the book phrases it — do not invent one.";
 
-/** Sends one PDF chunk to Claude and returns the recipes it finds, already validated. */
+/** Sends one PDF chunk to Claude and returns the recipes it finds, already validated.
+ *
+ * Throws if Claude's response was cut off by max_tokens: a dense chunk (several full recipes —
+ * title, ingredients, steps — per page) can need many thousands of output tokens, and a
+ * truncated tool call produces incomplete JSON that would otherwise be silently read back as
+ * "found nothing" rather than surfaced as the failure it is. The caller (run-job.ts) retries a
+ * thrown error up to 3 times before giving up on that chunk, same as any other extraction error. */
 export async function extractRecipesFromChunk(pdfBytes: Uint8Array): Promise<ExtractedRecipe[]> {
   const anthropic = new Anthropic({ apiKey: env.anthropicApiKey });
   const response = await anthropic.messages.create({
     model: env.claudeModelMain,
-    max_tokens: 4096,
+    max_tokens: 16384,
     tool_choice: { type: "tool", name: "extract_recipes" },
     tools: [EXTRACT_TOOL],
     messages: [
@@ -93,6 +99,10 @@ export async function extractRecipesFromChunk(pdfBytes: Uint8Array): Promise<Ext
       },
     ],
   });
+
+  if (response.stop_reason === "max_tokens") {
+    throw new Error("Claude's response was cut off (max_tokens) before finishing this chunk's recipes");
+  }
 
   const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
   if (!toolUse) return [];
